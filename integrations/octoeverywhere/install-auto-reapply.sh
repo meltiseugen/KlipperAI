@@ -254,14 +254,18 @@ PY
 }
 
 refresh_moonraker_updates() {
-  python3 - "\$MOONRAKER_URL" <<'PY' || true
+  python3 - "\$MOONRAKER_URL" "\$OE_UPDATE_MANAGER" <<'PY' || true
 import sys
 import urllib.parse
 import urllib.request
 
 base_url = sys.argv[1].rstrip("/")
-query = urllib.parse.urlencode({"refresh": "true"})
-with urllib.request.urlopen(f"{base_url}/machine/update/status?{query}", timeout=120) as response:
+query = urllib.parse.urlencode({"name": sys.argv[2]})
+request = urllib.request.Request(
+    f"{base_url}/machine/update/refresh?{query}",
+    method="POST",
+)
+with urllib.request.urlopen(request, timeout=120) as response:
     response.read()
 PY
 }
