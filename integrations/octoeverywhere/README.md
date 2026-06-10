@@ -4,16 +4,16 @@ This integration is an unsupported local patch for an existing Klipper
 OctoEverywhere checkout. It is intended for hosts where:
 
 - the main OctoEverywhere printer portal still serves Mainsail or Fluidd
-- `Shared Connection` URLs are not desired for KlippyAI
-- KlippyAI is already installed locally and reachable behind nginx at `/klippyai/`
+- `Shared Connection` URLs are not desired for KlipperAI
+- KlipperAI is already installed locally and reachable behind nginx at `/klipperai/`
 
 What the patch does:
 
 - extends OctoEverywhere's Moonraker-side relative-path router so requests for
-  `/klippyai` and `/klippyai/...` are forwarded directly to the local KlippyAI
+  `/klipperai` and `/klipperai/...` are forwarded directly to the local KlipperAI
   backend on `127.0.0.1:8811`
-- patches OctoEverywhere's injected frontend helper so the `KlippyAI` nav item
-  bypasses the Mainsail SPA/router and can open KlippyAI in either the current
+- patches OctoEverywhere's injected frontend helper so the `KlipperAI` nav item
+  bypasses the Mainsail SPA/router and can open KlipperAI in either the current
   tab or a new tab
 
 What it does not do:
@@ -28,8 +28,8 @@ What it does not do:
 
 - OctoEverywhere checkout path: `/home/<service-user>/octoeverywhere`
   or, on rooted Creality Nebula Pad-style layouts, `/usr/data/octoeverywhere`
-- KlippyAI backend port: `8811`
-- KlippyAI public prefix: `/klippyai`
+- KlipperAI backend port: `8811`
+- KlipperAI public prefix: `/klipperai`
 
 If your host differs, pass explicit arguments to the helper script.
 
@@ -38,11 +38,11 @@ helper automatically.
 
 ## Apply
 
-From the KlippyAI checkout on the host:
+From the KlipperAI checkout on the host:
 
 ```bash
-chmod +x integrations/octoeverywhere/apply-local-klippyai-route-patch.sh
-./integrations/octoeverywhere/apply-local-klippyai-route-patch.sh \
+chmod +x integrations/octoeverywhere/apply-local-klipperai-route-patch.sh
+./integrations/octoeverywhere/apply-local-klipperai-route-patch.sh \
   --oe-root /home/<service-user>/octoeverywhere \
   --restart-service
 ```
@@ -50,20 +50,20 @@ chmod +x integrations/octoeverywhere/apply-local-klippyai-route-patch.sh
 Rooted Creality Nebula Pad example:
 
 ```bash
-./integrations/octoeverywhere/apply-local-klippyai-route-patch.sh \
+./integrations/octoeverywhere/apply-local-klipperai-route-patch.sh \
   --oe-root /usr/data/octoeverywhere \
   --restart-service
 ```
 
 Optional flags:
 
-- `--klippyai-prefix /klippyai`
-- `--klippyai-port 8811`
+- `--klipperai-prefix /klipperai`
+- `--klipperai-port 8811`
 - `--nav-target _blank`
 - `--service octoeverywhere`
 
 The script writes timestamped backups under
-`/etc/klippyai/octoeverywhere-backups` so the OctoEverywhere git checkout does
+`/etc/klipperai/octoeverywhere-backups` so the OctoEverywhere git checkout does
 not get extra untracked backup files.
 
 ## Auto-Reapply After Updates
@@ -75,17 +75,17 @@ only when it is missing:
 ```bash
 sh integrations/octoeverywhere/install-auto-reapply.sh \
   --oe-root /usr/data/octoeverywhere \
-  --klippyai-prefix /klippyai \
-  --klippyai-port 8811 \
+  --klipperai-prefix /klipperai \
+  --klipperai-port 8811 \
   --nav-target _blank \
   --service octoeverywhere
 ```
 
 Installed artifacts:
 
-- `/usr/local/bin/klippyai-octoeverywhere-reapply`
-- `/etc/systemd/system/klippyai-octoeverywhere-reapply.service`
-- `/etc/systemd/system/klippyai-octoeverywhere-reapply.timer`
+- `/usr/local/bin/klipperai-octoeverywhere-reapply`
+- `/etc/systemd/system/klipperai-octoeverywhere-reapply.service`
+- `/etc/systemd/system/klipperai-octoeverywhere-reapply.timer`
 
 ## Updating OctoEverywhere
 
@@ -94,7 +94,7 @@ Moonraker's update manager can report the OE repo as dirty. Before updating
 OctoEverywhere, restore those files and suspend auto-reapply:
 
 ```bash
-sh integrations/octoeverywhere/apply-local-klippyai-route-patch.sh \
+sh integrations/octoeverywhere/apply-local-klipperai-route-patch.sh \
   --oe-root /usr/data/octoeverywhere \
   --restore-original \
   --restart-service \
@@ -102,13 +102,13 @@ sh integrations/octoeverywhere/apply-local-klippyai-route-patch.sh \
 ```
 
 Then run the OctoEverywhere update from Mainsail/Moonraker. After it finishes,
-reapply KlippyAI:
+reapply KlipperAI:
 
 ```bash
-sh integrations/octoeverywhere/apply-local-klippyai-route-patch.sh \
+sh integrations/octoeverywhere/apply-local-klipperai-route-patch.sh \
   --oe-root /usr/data/octoeverywhere \
-  --klippyai-prefix /klippyai \
-  --klippyai-port 8811 \
+  --klipperai-prefix /klipperai \
+  --klipperai-port 8811 \
   --nav-target _blank \
   --restart-service \
   --service octoeverywhere
@@ -121,8 +121,8 @@ Reapplying removes the auto-reapply suspend marker.
 After the script restarts OctoEverywhere:
 
 1. hard-refresh the OctoEverywhere printer portal
-2. open `https://<printer>.octoeverywhere.com/klippyai/`
-3. click the `KlippyAI` navigation entry from the OE-hosted Mainsail sidebar
+2. open `https://<printer>.octoeverywhere.com/klipperai/`
+3. click the `KlipperAI` navigation entry from the OE-hosted Mainsail sidebar
 
 If the browser still serves cached Mainsail shell content on the first try,
 repeat the test in an incognito window.
@@ -131,7 +131,7 @@ repeat the test in an incognito window.
 
 Run the patch helper with `--restore-original`, then restart the OctoEverywhere
 service again. The script also writes timestamped backups under
-`/etc/klippyai/octoeverywhere-backups`.
+`/etc/klipperai/octoeverywhere-backups`.
 
 ## Maintenance
 

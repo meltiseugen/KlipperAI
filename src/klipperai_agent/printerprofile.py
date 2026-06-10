@@ -8,9 +8,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
-from klippyai_agent.moonraker import MoonrakerClient, MoonrakerError
-from klippyai_agent.printerconfig import ConfigCollector, ConfigDocument, ConfigSnapshot
-from klippyai_agent.settings import Settings
+from klipperai_agent.moonraker import MoonrakerClient, MoonrakerError
+from klipperai_agent.printerconfig import ConfigCollector, ConfigDocument, ConfigSnapshot
+from klipperai_agent.settings import Settings
 
 ProfileConfidence = Literal["low", "medium", "high"]
 _INI_SECTION_PATTERN = re.compile(r"^\s*\[([^\]]+)\]\s*$")
@@ -272,16 +272,16 @@ def build_profile_from_settings(settings: Settings) -> PrinterProfile:
         addons=[
             DetectedAddon(
                 name=name,
-                source="klippyai.cfg",
+                source="klipperai.cfg",
                 confidence="high",
             )
             for name in addon_names
         ],
         evidence=[
-            ProfileEvidence("Printer profile loaded from klippyai.cfg.", "klippyai.cfg", "high"),
+            ProfileEvidence("Printer profile loaded from klipperai.cfg.", "klipperai.cfg", "high"),
         ],
         notes=[
-            "Static printer profile loaded from klippyai.cfg.",
+            "Static printer profile loaded from klipperai.cfg.",
         ],
         canbus_interfaces=["configured"] if settings.canbus_enabled else [],
     )
@@ -660,10 +660,10 @@ class PrinterProfileCollector:
         toolhead = self._detect_toolhead(snapshot, toolhead_mcu)
         if self._mainboard_override:
             mainboard = self._mainboard_override
-            evidence.append(ProfileEvidence(f"Mainboard declared as {mainboard}.", "klippyai.cfg", "high"))
+            evidence.append(ProfileEvidence(f"Mainboard declared as {mainboard}.", "klipperai.cfg", "high"))
         if self._toolhead_override:
             toolhead = self._toolhead_override
-            evidence.append(ProfileEvidence(f"Toolhead declared as {toolhead}.", "klippyai.cfg", "high"))
+            evidence.append(ProfileEvidence(f"Toolhead declared as {toolhead}.", "klipperai.cfg", "high"))
 
         addons = self._detect_addons(snapshot, object_names_list, update_status, services)
         probe_type = self._detect_probe_type(snapshot, object_names_list)

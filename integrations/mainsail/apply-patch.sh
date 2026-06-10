@@ -3,16 +3,16 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PATCH_FILE="$SCRIPT_DIR/patches/mainsail-v2.17.0-klippyai-shell.patch"
+PATCH_FILE="$SCRIPT_DIR/patches/mainsail-v2.17.0-klipperai-shell.patch"
 EXPECTED_COMMIT="6130a0aa1776a138feaab691b9e4b1334b676b79"
 
 die() {
-  printf '[KlippyAI mainsail] error: %s\n' "$*" >&2
+  printf '[KlipperAI mainsail] error: %s\n' "$*" >&2
   exit 1
 }
 
 log() {
-  printf '[KlippyAI mainsail] %s\n' "$*"
+  printf '[KlipperAI mainsail] %s\n' "$*"
 }
 
 TARGET_DIR="${1:-}"

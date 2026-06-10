@@ -1,14 +1,14 @@
 [Unit]
-Description=KlippyAI agent
+Description=KlipperAI agent
 After=network-online.target moonraker.service
 Wants=network-online.target
 
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/home/pi/KlippyAI
-EnvironmentFile=-/etc/klippyai/klippyai.env
-ExecStart=/home/pi/KlippyAI/.venv/bin/klippyai-agent
+WorkingDirectory=/home/pi/KlipperAI
+EnvironmentFile=-/etc/klipperai/klipperai.env
+ExecStart=/home/pi/KlipperAI/.venv/bin/klipperai-agent
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=yes

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import subprocess
 
-from klippyai_agent.hostsystem import CommandResult, HostSystemCollector
+from klipperai_agent.hostsystem import CommandResult, HostSystemCollector
 
 
 class _FakeRunner:

@@ -1,10 +1,10 @@
-# KlippyAI Host Install Guide
+# KlipperAI Host Install Guide
 
-This guide is the shortest path to getting KlippyAI running on a Klipper or Kalico host that already has Moonraker and Mainsail installed.
+This guide is the shortest path to getting KlipperAI running on a Klipper or Kalico host that already has Moonraker and Mainsail installed.
 
 Current runtime behavior:
 
-- KlippyAI is `read-only`
+- KlipperAI is `read-only`
 - it can read logs, config files, and Moonraker state
 - it can propose config snippets in chat
 - it will **not** write printer/config files
@@ -27,7 +27,7 @@ The installer can help install:
 - the matching `venv` package for that interpreter, for example `python3-venv`, `python3.10-venv`, or `python3.11-venv`
 - `python3-pip`
 
-KlippyAI requires Python `3.10+`. If `python3 --version` reports `3.9` or older, run [docs/python310-install.md](docs/python310-install.md) or `./deployment/python/install-python310.sh` first, then rerun the installer.
+KlipperAI requires Python `3.10+`. If `python3 --version` reports `3.9` or older, run [docs/python310-install.md](docs/python310-install.md) or `./deployment/python/install-python310.sh` first, then rerun the installer.
 
 If `bash install.sh` prints `bash: not found`, the host only has a smaller
 `sh` shell. Install Bash first, then rerun `./install.sh`.
@@ -92,14 +92,14 @@ the installer after updating the checkout. The installer also asks Python
 packages with optional speedups to use pure-Python fallbacks where possible.
 
 ```sh
-cd /root/KlippyAI
+cd /root/KlipperAI
 rm -rf .venv
 ./install.sh
 ```
 
 Some rooted images have `systemctl` but do not pre-create
 `/etc/systemd/system`. The installer creates that directory before writing the
-`klippyai-agent.service` unit.
+`klipperai-agent.service` unit.
 
 You also need:
 
@@ -111,8 +111,8 @@ Run on the printer host:
 
 ```bash
 cd /home/<service-user>
-git clone https://github.com/meltiseugen/KlippyAI.git
-cd KlippyAI
+git clone https://github.com/meltiseugen/KlipperAI.git
+cd KlipperAI
 chmod +x install.sh uninstall.sh deployment/python/install-python310.sh
 ```
 
@@ -120,8 +120,8 @@ Example for a common `biqu` host:
 
 ```bash
 cd /home/biqu
-git clone https://github.com/meltiseugen/KlippyAI.git
-cd KlippyAI
+git clone https://github.com/meltiseugen/KlipperAI.git
+cd KlipperAI
 chmod +x install.sh uninstall.sh deployment/python/install-python310.sh
 ```
 
@@ -159,11 +159,11 @@ The installer will ask for:
 Recommended/default values:
 
 - service user: your actual printer user, for example `biqu` or `pi`
-- checkout path: `/home/<service-user>/KlippyAI`
+- checkout path: `/home/<service-user>/KlipperAI`
 - printer data root: `/home/<service-user>/printer_data`
 - Mainsail config dir: `/home/<service-user>/printer_data/config`
 - Moonraker URL: `http://127.0.0.1:7125`
-- root path: `/klippyai`
+- root path: `/klipperai`
 - port: `8811`
 - provider: `openai`
 - model: `gpt-5.4-mini`
@@ -174,19 +174,19 @@ The installer will:
 
 - create a Python virtual environment in the repo
 - install the package into that venv
-- write `/etc/klippyai/klippyai.env` for the config-file path, API key, and hidden install metadata
-- write `printer_data/config/klippyai/klippyai.cfg`
-- detect the printer profile once and save it into `klippyai.cfg`
-- write `printer_data/config/klippyai/klippyai-moonraker.cfg`
-- append an include like `[include klippyai/klippyai-moonraker.cfg]` to `moonraker.conf` if needed
-- add `klippyai-agent` to `printer_data/moonraker.asvc`
-- install and start `klippyai-agent.service`
-- generate `/etc/klippyai/nginx-location.conf`
+- write `/etc/klipperai/klipperai.env` for the config-file path, API key, and hidden install metadata
+- write `printer_data/config/klipperai/klipperai.cfg`
+- detect the printer profile once and save it into `klipperai.cfg`
+- write `printer_data/config/klipperai/klipperai-moonraker.cfg`
+- append an include like `[include klipperai/klipperai-moonraker.cfg]` to `moonraker.conf` if needed
+- add `klipperai-agent` to `printer_data/moonraker.asvc`
+- install and start `klipperai-agent.service`
+- generate `/etc/klipperai/nginx-location.conf`
 - optionally patch the selected Mainsail nginx server block to include that snippet
 - optionally add a Mainsail nav link in `.theme/navi.json`
-- if `gcode_shell_command` is available, optionally create an `UPDATE_KLIPPYAI` macro plus helper script and sudoers entry
-- if OctoEverywhere is installed, optionally apply the local OE `/klippyai/` route patch automatically
-- write the KlippyAI runtime log to `printer_data/logs/klippyai.log`
+- if `gcode_shell_command` is available, optionally create an `UPDATE_KLIPPERAI` macro plus helper script and sudoers entry
+- if OctoEverywhere is installed, optionally apply the local OE `/klipperai/` route patch automatically
+- write the KlipperAI runtime log to `printer_data/logs/klipperai.log`
 
 ## 5. Edit nginx
 
@@ -195,7 +195,7 @@ The installer can patch nginx automatically and reload it after a successful con
 If you choose not to let the installer patch nginx, add this line inside the Mainsail nginx `server` block manually:
 
 ```nginx
-include /etc/klippyai/nginx-location.conf;
+include /etc/klipperai/nginx-location.conf;
 ```
 
 Common file locations:
@@ -229,11 +229,11 @@ sudo systemctl restart moonraker
 Check both services:
 
 ```bash
-systemctl status klippyai-agent --no-pager
+systemctl status klipperai-agent --no-pager
 systemctl status moonraker --no-pager
 ```
 
-Check KlippyAI health:
+Check KlipperAI health:
 
 ```bash
 curl http://127.0.0.1:8811/healthz
@@ -242,18 +242,18 @@ curl http://127.0.0.1:8811/healthz
 Open the UI:
 
 ```text
-http://<printer-host>/klippyai/
+http://<printer-host>/klipperai/
 ```
 
 If you enabled the Mainsail nav link:
 
 - reload the Mainsail page
-- click `KlippyAI`
+- click `KlipperAI`
 
 Optional OctoEverywhere path:
 
 - if you want the main OctoEverywhere printer portal to serve
-  `https://<printer>.octoeverywhere.com/klippyai/` without using a Shared
+  `https://<printer>.octoeverywhere.com/klipperai/` without using a Shared
   Connection URL, see
   [integrations/octoeverywhere/README.md](integrations/octoeverywhere/README.md)
   and apply the local OE host patch from this repo
@@ -274,8 +274,8 @@ Manual auto-reapply timer install:
 ```bash
 sh integrations/octoeverywhere/install-auto-reapply.sh \
   --oe-root /usr/data/octoeverywhere \
-  --klippyai-prefix /klippyai \
-  --klippyai-port 8811 \
+  --klipperai-prefix /klipperai \
+  --klipperai-port 8811 \
   --nav-target _blank \
   --service octoeverywhere
 ```
@@ -283,20 +283,20 @@ sh integrations/octoeverywhere/install-auto-reapply.sh \
 Prepare for an OctoEverywhere update:
 
 ```bash
-sh integrations/octoeverywhere/apply-local-klippyai-route-patch.sh \
+sh integrations/octoeverywhere/apply-local-klipperai-route-patch.sh \
   --oe-root /usr/data/octoeverywhere \
   --restore-original \
   --restart-service \
   --service octoeverywhere
 ```
 
-After the OctoEverywhere update finishes, reapply KlippyAI:
+After the OctoEverywhere update finishes, reapply KlipperAI:
 
 ```bash
-sh integrations/octoeverywhere/apply-local-klippyai-route-patch.sh \
+sh integrations/octoeverywhere/apply-local-klipperai-route-patch.sh \
   --oe-root /usr/data/octoeverywhere \
-  --klippyai-prefix /klippyai \
-  --klippyai-port 8811 \
+  --klipperai-prefix /klipperai \
+  --klipperai-port 8811 \
   --nav-target _blank \
   --restart-service \
   --service octoeverywhere
@@ -306,35 +306,35 @@ sh integrations/octoeverywhere/apply-local-klippyai-route-patch.sh \
 
 Editable runtime config:
 
-- `/home/<service-user>/printer_data/config/klippyai/klippyai.cfg`
+- `/home/<service-user>/printer_data/config/klipperai/klipperai.cfg`
 
 Optional Klipper update macro files:
 
-- `/home/<service-user>/printer_data/config/klippyai/klippyai-macros.cfg`
-- `/usr/local/bin/klippyai-self-update`
-- `/etc/sudoers.d/klippyai-self-update`
+- `/home/<service-user>/printer_data/config/klipperai/klipperai-macros.cfg`
+- `/usr/local/bin/klipperai-self-update`
+- `/etc/sudoers.d/klipperai-self-update`
 
 Server-side API key and hidden install metadata:
 
-- `/etc/klippyai/klippyai.env`
+- `/etc/klipperai/klipperai.env`
 
 Moonraker include:
 
-- `/home/<service-user>/printer_data/config/klippyai/klippyai-moonraker.cfg`
+- `/home/<service-user>/printer_data/config/klipperai/klipperai-moonraker.cfg`
 
 Generated nginx snippet:
 
-- `/etc/klippyai/nginx-location.conf`
+- `/etc/klipperai/nginx-location.conf`
 
-KlippyAI runtime log:
+KlipperAI runtime log:
 
-- `/home/<service-user>/printer_data/logs/klippyai.log`
+- `/home/<service-user>/printer_data/logs/klipperai.log`
 
 ## 9. Change The Model Later
 
 Edit:
 
-- `printer_data/config/klippyai/klippyai.cfg`
+- `printer_data/config/klipperai/klipperai.cfg`
 
 Change:
 
@@ -347,7 +347,7 @@ openai_model = gpt-5.4-mini
 Then restart:
 
 ```bash
-sudo systemctl restart klippyai-agent
+sudo systemctl restart klipperai-agent
 ```
 
 ## 10. Rerun Printer Profile Detection
@@ -355,8 +355,8 @@ sudo systemctl restart klippyai-agent
 If the detected profile is wrong or you want to refresh it:
 
 ```bash
-/home/<service-user>/KlippyAI/.venv/bin/klippyai-detect-profile \
-  --config-file /home/<service-user>/printer_data/config/klippyai/klippyai.cfg \
+/home/<service-user>/KlipperAI/.venv/bin/klipperai-detect-profile \
+  --config-file /home/<service-user>/printer_data/config/klipperai/klipperai.cfg \
   --moonraker-url http://127.0.0.1:7125 \
   --printer-data-root /home/<service-user>/printer_data \
   --overwrite
@@ -365,10 +365,10 @@ If the detected profile is wrong or you want to refresh it:
 Then restart:
 
 ```bash
-sudo systemctl restart klippyai-agent
+sudo systemctl restart klipperai-agent
 ```
 
-You can also manually edit these sections in `klippyai.cfg`:
+You can also manually edit these sections in `klipperai.cfg`:
 
 - `[printer_identity]`
 - `[printer_capabilities]`
@@ -379,9 +379,9 @@ For follow-up questions, `conversation_history_pairs` controls how many previous
 user/assistant pairs from the current chat are sent with each request. The
 default is `10`; set it to `0` to disable conversation context.
 
-If this host still has an older `[printer_geometry]` section in `klippyai.cfg`, remove that section before restarting `klippyai-agent`.
+If this host still has an older `[printer_geometry]` section in `klipperai.cfg`, remove that section before restarting `klipperai-agent`.
 
-## 11. Optional UPDATE_KLIPPYAI Macro
+## 11. Optional UPDATE_KLIPPERAI Macro
 
 The installer offers this macro when it detects Klipper/Kalico
 `gcode_shell_command` support. If it finds a Klipper/Kalico checkout but the
@@ -399,20 +399,20 @@ find /usr/data /root /opt /usr/local /usr/share -maxdepth 6 \
 
 If the macro is installed, it writes:
 
-- `/usr/local/bin/klippyai-self-update`
-- `/usr/data/printer_data/config/klippyai/klippyai-macros.cfg`
+- `/usr/local/bin/klipperai-self-update`
+- `/usr/data/printer_data/config/klipperai/klipperai-macros.cfg`
 - an include in `/usr/data/printer_data/config/printer.cfg`
-- `/etc/sudoers.d/klippyai-self-update` only when Klipper does not run as root
+- `/etc/sudoers.d/klipperai-self-update` only when Klipper does not run as root
 
-When Klipper runs as root, the macro calls `/usr/local/bin/klippyai-self-update`
+When Klipper runs as root, the macro calls `/usr/local/bin/klipperai-self-update`
 directly and does not require `sudo`.
 
 Manual install on a rooted Nebula Pad:
 
 ```bash
-cd /root/KlippyAI
+cd /root/KlipperAI
 sh integrations/klipper/install-update-macro.sh \
-  --install-dir /root/KlippyAI \
+  --install-dir /root/KlipperAI \
   --install-user root \
   --config-dir /usr/data/printer_data/config \
   --root-config /usr/data/printer_data/config/printer.cfg \
@@ -422,17 +422,17 @@ sh integrations/klipper/install-update-macro.sh \
 
 ## 12. Runtime Behavior
 
-KlippyAI currently:
+KlipperAI currently:
 
 - reads current `.log` files under `printer_data/logs`
 - sends only the configured last lines from each collected log file
-- writes its own runtime log to `printer_data/logs/klippyai.log`
+- writes its own runtime log to `printer_data/logs/klipperai.log`
 - reads current config files
 - reads Moonraker state
 - reads `systemctl` and `journalctl` data for Klipper and Moonraker
 - proposes config snippets in chat
 
-KlippyAI currently does **not**:
+KlipperAI currently does **not**:
 
 - write printer config files
 - patch `printer.cfg`
@@ -443,9 +443,9 @@ KlippyAI currently does **not**:
 If the service does not start:
 
 ```bash
-systemctl status klippyai-agent --no-pager
-journalctl -u klippyai-agent -n 200 --no-pager
-tail -n 200 /home/<service-user>/printer_data/logs/klippyai.log
+systemctl status klipperai-agent --no-pager
+journalctl -u klipperai-agent -n 200 --no-pager
+tail -n 200 /home/<service-user>/printer_data/logs/klipperai.log
 ```
 
 If Moonraker integration does not show up:
@@ -458,9 +458,9 @@ journalctl -u moonraker -n 200 --no-pager
 Check the generated files:
 
 ```bash
-cat /etc/klippyai/klippyai.env
-cat /home/<service-user>/printer_data/config/klippyai/klippyai.cfg
-cat /home/<service-user>/printer_data/config/klippyai/klippyai-moonraker.cfg
+cat /etc/klipperai/klipperai.env
+cat /home/<service-user>/printer_data/config/klipperai/klipperai.cfg
+cat /home/<service-user>/printer_data/config/klipperai/klipperai-moonraker.cfg
 cat /home/<service-user>/printer_data/moonraker.asvc
 ```
 
@@ -470,25 +470,25 @@ Check nginx:
 sudo nginx -t
 ```
 
-If clicking the Mainsail `KlippyAI` button opens a blank Mainsail page, check
-whether `/klippyai/` is falling through to Mainsail instead of KlippyAI:
+If clicking the Mainsail `KlipperAI` button opens a blank Mainsail page, check
+whether `/klipperai/` is falling through to Mainsail instead of KlipperAI:
 
 ```bash
 curl http://127.0.0.1:8811/healthz
-curl http://127.0.0.1/klippyai/healthz
-grep -R "klippyai\|nginx-location" /usr/data/nginx /etc/nginx 2>/dev/null
+curl http://127.0.0.1/klipperai/healthz
+grep -R "klipperai\|nginx-location" /usr/data/nginx /etc/nginx 2>/dev/null
 ```
 
-The first two commands should return JSON. If `/klippyai/healthz` returns
-Mainsail HTML, add `include /etc/klippyai/nginx-location.conf;` inside the
+The first two commands should return JSON. If `/klipperai/healthz` returns
+Mainsail HTML, add `include /etc/klipperai/nginx-location.conf;` inside the
 active Mainsail nginx `server` block, then reload nginx.
 
 ## 14. Uninstall
 
-To remove KlippyAI:
+To remove KlipperAI:
 
 ```bash
-cd /home/<service-user>/KlippyAI
+cd /home/<service-user>/KlipperAI
 ./uninstall.sh
 ```
 

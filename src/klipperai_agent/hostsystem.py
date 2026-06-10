@@ -4,7 +4,7 @@ import shlex
 import subprocess
 from dataclasses import dataclass
 
-from klippyai_agent.schemas import ArtifactInput
+from klipperai_agent.schemas import ArtifactInput
 
 
 @dataclass(frozen=True, slots=True)

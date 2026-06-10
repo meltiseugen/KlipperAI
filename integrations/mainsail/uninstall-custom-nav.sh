@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-TITLE="KlippyAI"
-HREF="/klippyai/"
+TITLE="KlipperAI"
+HREF="/klipperai/"
 CONFIG_DIR=""
 
 usage() {
@@ -20,7 +20,7 @@ EOF
 }
 
 die() {
-  printf '[KlippyAI] error: %s\n' "$*" >&2
+  printf '[KlipperAI] error: %s\n' "$*" >&2
   exit 1
 }
 
@@ -56,7 +56,7 @@ NAVI_FILE="${CONFIG_DIR%/}/.theme/navi.json"
 TIMESTAMP="$(date +%Y%m%d%H%M%S)"
 
 if [[ ! -f "$NAVI_FILE" ]]; then
-  printf '[KlippyAI] No custom navigation file found at %s\n' "$NAVI_FILE"
+  printf '[KlipperAI] No custom navigation file found at %s\n' "$NAVI_FILE"
   exit 0
 fi
 
@@ -93,4 +93,4 @@ for item in loaded:
 navi_file.write_text(json.dumps(filtered, indent=2) + "\n", encoding="utf-8")
 PY
 
-printf '[KlippyAI] Updated %s\n' "$NAVI_FILE"
+printf '[KlipperAI] Updated %s\n' "$NAVI_FILE"

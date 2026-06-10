@@ -9,11 +9,11 @@ from pydantic import BaseSettings, Field, SecretStr, root_validator, validator
 
 
 class Settings(BaseSettings):
-    app_name: str = "KlippyAI"
+    app_name: str = "KlipperAI"
     environment: str = "development"
-    config_file: Path = Path("/home/pi/printer_data/config/klippyai/klippyai.cfg")
+    config_file: Path = Path("/home/pi/printer_data/config/klipperai/klipperai.cfg")
     service_user: str = "pi"
-    project_checkout_path: Path = Path("/home/pi/KlippyAI")
+    project_checkout_path: Path = Path("/home/pi/KlipperAI")
     mainsail_config_dir: Path = Path("/home/pi/printer_data/config")
     config_root_file: str | None = None
     config_ignore_globs: str | None = None
@@ -38,15 +38,15 @@ class Settings(BaseSettings):
     root_path: str = ""
     public_base_url: str = ""
     moonraker_url: str = "http://127.0.0.1:7125"
-    data_dir: Path = Path(".local/klippyai")
-    checkpoint_db: Path = Path(".local/klippyai/checkpoints.sqlite")
+    data_dir: Path = Path(".local/klipperai")
+    checkpoint_db: Path = Path(".local/klipperai/checkpoints.sqlite")
     printer_data_root: Path = Path("/home/pi/printer_data")
-    managed_config_dir_name: str = "klippyai"
+    managed_config_dir_name: str = "klipperai"
     session_ttl_seconds: int = 3600
     conversation_history_pairs: int = Field(default=10, ge=0, le=50)
     collect_host_logs: bool = True
     logs_dir_path: Path = Path("logs")
-    agent_log_file_name: str = "klippyai.log"
+    agent_log_file_name: str = "klipperai.log"
     agent_log_level: str = "INFO"
     agent_log_max_bytes: int = 2_097_152
     agent_log_backup_count: int = 5
@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     enable_write_actions: bool = False
 
     class Config:
-        env_prefix = "KLIPPYAI_"
+        env_prefix = "KLIPPERAI_"
         env_file = ".env"
         env_file_encoding = "utf-8"
         extra = "ignore"
@@ -141,7 +141,7 @@ class Settings(BaseSettings):
 
     @root_validator
     def _enforce_read_only_runtime(cls, values: dict[str, Any]) -> dict[str, Any]:
-        # KlippyAI runtime is intentionally shackled for now. Keep the flag for
+        # KlipperAI runtime is intentionally shackled for now. Keep the flag for
         # forward compatibility, but do not allow it to enable file writes.
         values["enable_write_actions"] = False
         values["agent_log_level"] = str(values.get("agent_log_level", "INFO")).upper()
@@ -167,7 +167,7 @@ class Settings(BaseSettings):
         self.host_logs_dir().mkdir(parents=True, exist_ok=True)
 
 
-def _load_klippyai_cfg_values(config_file: Path) -> dict[str, Any]:
+def _load_klipperai_cfg_values(config_file: Path) -> dict[str, Any]:
     if not config_file.exists() or not config_file.is_file():
         return {}
 
@@ -213,5 +213,5 @@ def _load_klippyai_cfg_values(config_file: Path) -> dict[str, Any]:
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     bootstrap = Settings()
-    cfg_values = _load_klippyai_cfg_values(bootstrap.config_file)
+    cfg_values = _load_klipperai_cfg_values(bootstrap.config_file)
     return Settings(**cfg_values)

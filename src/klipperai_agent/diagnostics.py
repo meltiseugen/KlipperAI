@@ -5,11 +5,11 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from klippyai_agent.hostlogs import HostLogCollector
-from klippyai_agent.hostsystem import HostSystemCollector
-from klippyai_agent.moonraker import MoonrakerClient, MoonrakerError
-from klippyai_agent.printerconfig import ConfigSnapshot
-from klippyai_agent.schemas import ArtifactInput, IssueFinding, Severity
+from klipperai_agent.hostlogs import HostLogCollector
+from klipperai_agent.hostsystem import HostSystemCollector
+from klipperai_agent.moonraker import MoonrakerClient, MoonrakerError
+from klipperai_agent.printerconfig import ConfigSnapshot
+from klipperai_agent.schemas import ArtifactInput, IssueFinding, Severity
 
 
 @dataclass(slots=True)

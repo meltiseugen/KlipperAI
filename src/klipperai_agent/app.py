@@ -10,11 +10,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from klippyai_agent.container import AppContainer, build_container
-from klippyai_agent.schemas import BootstrapResponse, ChatRequest, ChatResponse, UiSessionResponse
-from klippyai_agent.settings import get_settings
+from klipperai_agent.container import AppContainer, build_container
+from klipperai_agent.schemas import BootstrapResponse, ChatRequest, ChatResponse, UiSessionResponse
+from klipperai_agent.settings import get_settings
 
-logger = logging.getLogger("klippyai_agent.app")
+logger = logging.getLogger("klipperai_agent.app")
 
 
 def create_app() -> FastAPI:

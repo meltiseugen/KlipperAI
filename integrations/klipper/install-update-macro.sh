@@ -6,19 +6,19 @@ usage() {
   cat <<'EOF'
 Usage: install-update-macro.sh [options]
 
-Install the optional UPDATE_KLIPPYAI Klipper macro. The macro uses
-gcode_shell_command to run a narrow helper that pulls the KlippyAI checkout,
-refreshes the editable Python install, and restarts klippyai-agent.
+Install the optional UPDATE_KLIPPERAI Klipper macro. The macro uses
+gcode_shell_command to run a narrow helper that pulls the KlipperAI checkout,
+refreshes the editable Python install, and restarts klipperai-agent.
 
 Options:
-  --install-dir PATH       KlippyAI checkout root. Default: auto-detected
-  --install-user USER      User that owns/runs the KlippyAI checkout. Default: env or current user
+  --install-dir PATH       KlipperAI checkout root. Default: auto-detected
+  --install-user USER      User that owns/runs the KlipperAI checkout. Default: env or current user
   --config-dir PATH        Klipper config directory. Default: /usr/data/printer_data/config when present
   --root-config PATH       Root printer config. Default: CONFIG_DIR/printer.cfg
   --klipper-checkout PATH  Klipper/Kalico checkout. Default: auto-detected
   --install-gcode-shell-command
                            Install gcode_shell_command.py first if it is missing
-  --klippyai-service NAME  KlippyAI systemd service. Default: klippyai-agent
+  --klipperai-service NAME  KlipperAI systemd service. Default: klipperai-agent
   --klipper-service NAME   Klipper systemd service. Default: klipper.service
   --restart-klipper        Restart Klipper after writing the macro
   -h, --help               Show this help
@@ -26,12 +26,12 @@ EOF
 }
 
 die() {
-  printf '[KlippyAI update macro] error: %s\n' "$*" >&2
+  printf '[KlipperAI update macro] error: %s\n' "$*" >&2
   exit 1
 }
 
 log() {
-  printf '[KlippyAI update macro] %s\n' "$*"
+  printf '[KlipperAI update macro] %s\n' "$*"
 }
 
 run_root() {
@@ -108,7 +108,7 @@ import urllib.request
 
 url = sys.argv[1]
 output_path = sys.argv[2]
-request = urllib.request.Request(url, headers={"User-Agent": "KlippyAI installer"})
+request = urllib.request.Request(url, headers={"User-Agent": "KlipperAI installer"})
 with urllib.request.urlopen(request, timeout=30) as response:
     data = response.read()
 text = data.decode("utf-8")
@@ -152,9 +152,9 @@ normalize_service_name() {
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 INSTALL_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
-ENV_FILE="/etc/klippyai/klippyai.env"
+ENV_FILE="/etc/klipperai/klipperai.env"
 GCODE_SHELL_COMMAND_URL="https://raw.githubusercontent.com/dw-0/kiauh/master/kiauh/extensions/gcode_shell_cmd/assets/gcode_shell_command.py"
-INSTALL_USER=$(extract_env_value "$ENV_FILE" "KLIPPYAI_SERVICE_USER" 2>/dev/null || id -un)
+INSTALL_USER=$(extract_env_value "$ENV_FILE" "KLIPPERAI_SERVICE_USER" 2>/dev/null || id -un)
 if [ -d /usr/data/printer_data/config ]; then
   CONFIG_DIR="/usr/data/printer_data/config"
 else
@@ -163,11 +163,11 @@ fi
 ROOT_CONFIG=""
 KLIPPER_CHECKOUT=""
 INSTALL_GCODE_SHELL_COMMAND=0
-KLIPPYAI_SERVICE="klippyai-agent"
+KLIPPERAI_SERVICE="klipperai-agent"
 KLIPPER_SERVICE="klipper.service"
 RESTART_KLIPPER=0
-UPDATE_RUNNER_PATH="/usr/local/bin/klippyai-self-update"
-UPDATE_SUDOERS_PATH="/etc/sudoers.d/klippyai-self-update"
+UPDATE_RUNNER_PATH="/usr/local/bin/klipperai-self-update"
+UPDATE_SUDOERS_PATH="/etc/sudoers.d/klipperai-self-update"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -195,8 +195,8 @@ while [ $# -gt 0 ]; do
       INSTALL_GCODE_SHELL_COMMAND=1
       shift
       ;;
-    --klippyai-service)
-      KLIPPYAI_SERVICE="$2"
+    --klipperai-service)
+      KLIPPERAI_SERVICE="$2"
       shift 2
       ;;
     --klipper-service)
@@ -221,8 +221,8 @@ done
 
 [ -n "$ROOT_CONFIG" ] || ROOT_CONFIG="${CONFIG_DIR%/}/printer.cfg"
 [ -n "$KLIPPER_CHECKOUT" ] || KLIPPER_CHECKOUT=$(detect_klipper_checkout || true)
-MANAGED_CONFIG_DIR="${CONFIG_DIR%/}/klippyai"
-UPDATE_MACRO_CFG_PATH="$MANAGED_CONFIG_DIR/klippyai-macros.cfg"
+MANAGED_CONFIG_DIR="${CONFIG_DIR%/}/klipperai"
+UPDATE_MACRO_CFG_PATH="$MANAGED_CONFIG_DIR/klipperai-macros.cfg"
 KLIPPER_SERVICE_UNIT=$(normalize_service_name "$KLIPPER_SERVICE")
 
 [ -f "$INSTALL_DIR/pyproject.toml" ] || die "No pyproject.toml found in $INSTALL_DIR"
@@ -263,7 +263,7 @@ set -eu
 
 INSTALL_USER="$INSTALL_USER"
 INSTALL_DIR="$INSTALL_DIR"
-SERVICE_NAME="$KLIPPYAI_SERVICE"
+SERVICE_NAME="$KLIPPERAI_SERVICE"
 
 run_as_install_user() {
   if [ "\$(id -un)" = "\$INSTALL_USER" ]; then
@@ -281,39 +281,39 @@ run_as_install_user() {
     return
   fi
 
-  printf 'KlippyAI update helper cannot switch to %s\\n' "\$INSTALL_USER" >&2
+  printf 'KlipperAI update helper cannot switch to %s\\n' "\$INSTALL_USER" >&2
   exit 1
 }
 
 [ -d "\$INSTALL_DIR/.git" ] || {
-  printf 'KlippyAI checkout is no longer a git repository: %s\\n' "\$INSTALL_DIR" >&2
+  printf 'KlipperAI checkout is no longer a git repository: %s\\n' "\$INSTALL_DIR" >&2
   exit 1
 }
 [ -x "\$INSTALL_DIR/.venv/bin/python" ] || {
-  printf 'KlippyAI virtual environment is missing: %s/.venv/bin/python\\n' "\$INSTALL_DIR" >&2
+  printf 'KlipperAI virtual environment is missing: %s/.venv/bin/python\\n' "\$INSTALL_DIR" >&2
   exit 1
 }
 
 run_as_install_user git -C "\$INSTALL_DIR" pull --ff-only
 run_as_install_user env SKIP_CYTHON=1 MARKUPSAFE_SKIP_SPEEDUPS=1 "\$INSTALL_DIR/.venv/bin/python" -m pip install --prefer-binary -e "\$INSTALL_DIR"
 systemctl restart "\$SERVICE_NAME"
-printf 'KlippyAI updated and %s restarted.\\n' "\$SERVICE_NAME"
+printf 'KlipperAI updated and %s restarted.\\n' "\$SERVICE_NAME"
 EOF
 
 cat >"$MACRO_TMP" <<EOF
-# KlippyAI self-update shell command
+# KlipperAI self-update shell command
 #
 # Generated by install-update-macro.sh.
 
-[gcode_shell_command klippyai_update]
+[gcode_shell_command klipperai_update]
 command: $MACRO_COMMAND
 timeout: 600.
 verbose: True
 
-[gcode_macro UPDATE_KLIPPYAI]
-description: Pull the latest KlippyAI changes and restart klippyai-agent
+[gcode_macro UPDATE_KLIPPERAI]
+description: Pull the latest KlipperAI changes and restart klipperai-agent
 gcode:
-    RUN_SHELL_COMMAND CMD=klippyai_update
+    RUN_SHELL_COMMAND CMD=klipperai_update
 EOF
 
 run_root install -d -m 755 "$(dirname "$UPDATE_RUNNER_PATH")"
@@ -339,7 +339,7 @@ else
   log "Klipper runs as root; sudoers file is not needed."
 fi
 
-INCLUDE_LINE="[include klippyai/klippyai-macros.cfg]"
+INCLUDE_LINE="[include klipperai/klipperai-macros.cfg]"
 if ! grep -Fqx "$INCLUDE_LINE" "$ROOT_CONFIG"; then
   printf '\n%s\n' "$INCLUDE_LINE" | run_root tee -a "$ROOT_CONFIG" >/dev/null
 fi
@@ -353,5 +353,5 @@ log "Installed $UPDATE_MACRO_CFG_PATH"
 log "Included macro from $ROOT_CONFIG"
 log "Macro command: $MACRO_COMMAND"
 if [ "$RESTART_KLIPPER" -eq 0 ]; then
-  log "Restart Klipper to load UPDATE_KLIPPYAI: systemctl restart $KLIPPER_SERVICE_UNIT"
+  log "Restart Klipper to load UPDATE_KLIPPERAI: systemctl restart $KLIPPER_SERVICE_UNIT"
 fi

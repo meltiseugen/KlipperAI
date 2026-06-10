@@ -6,8 +6,8 @@ This directory contains both the recommended low-coupling Mainsail integration a
 
 The default `v1` path is a supported custom navigation entry in Mainsail:
 
-- it points to `/klippyai/`
-- it opens KlippyAI in a new browser tab by default
+- it points to `/klipperai/`
+- it opens KlipperAI in a new browser tab by default
 - it does not require forking or patching Mainsail
 - it survives upstream Mainsail web updates much better than direct file modifications
 
@@ -30,13 +30,13 @@ The example payload lives in `integrations/mainsail/navi.json.example`.
 
 The native patch keeps Mainsail changes deliberately small:
 
-- add a KlippyAI launcher button to the top bar
+- add a KlipperAI launcher button to the top bar
 - mount a native Mainsail shell component
 - open a right-side drawer
-- bootstrap a KlippyAI UI session from `/klippyai/api/ui-sessions`
+- bootstrap a KlipperAI UI session from `/klipperai/api/ui-sessions`
 - render the embedded assistant in an iframe
 
-The actual assistant UI and workflow logic remain in the KlippyAI service.
+The actual assistant UI and workflow logic remain in the KlipperAI service.
 
 ## Target Upstream
 
@@ -49,7 +49,7 @@ The actual assistant UI and workflow logic remain in the KlippyAI service.
 
 - `src/App.vue`
 - `src/components/TheTopbar.vue`
-- `src/components/integrations/KlippyAiShell.vue`
+- `src/components/integrations/KlipperAiShell.vue`
 
 ## What The Patch Adds
 
@@ -57,23 +57,23 @@ The actual assistant UI and workflow logic remain in the KlippyAI service.
 
 `App.vue` is patched to:
 
-- listen for a `toggle-klippyai` event from the top bar
-- keep a local `showKlippyAiShell` boolean
+- listen for a `toggle-klipperai` event from the top bar
+- keep a local `showKlipperAiShell` boolean
 - mount the drawer shell component
 
 ### Topbar Launcher
 
 `TheTopbar.vue` is patched to:
 
-- add a `KlippyAI` icon button beside the existing topbar controls
-- emit `toggle-klippyai` upward
+- add a `KlipperAI` icon button beside the existing topbar controls
+- emit `toggle-klipperai` upward
 
 ### Embedded Drawer
 
-`KlippyAiShell.vue` is a thin Mainsail-native shell that:
+`KlipperAiShell.vue` is a thin Mainsail-native shell that:
 
 - opens as a right-side drawer
-- requests a UI session from `/klippyai/api/ui-sessions`
+- requests a UI session from `/klipperai/api/ui-sessions`
 - shows a loading or error state if bootstrap fails
 - loads the returned `embed_path` into an iframe
 
@@ -103,13 +103,13 @@ Then deploy the generated Mainsail build as you normally would for your environm
 
 This shell patch assumes:
 
-- KlippyAI is reverse-proxied on the same origin at `/klippyai/`
-- `POST /klippyai/api/ui-sessions` is reachable from the Mainsail frontend
+- KlipperAI is reverse-proxied on the same origin at `/klipperai/`
+- `POST /klipperai/api/ui-sessions` is reachable from the Mainsail frontend
 - `embed_path` points to an embeddable iframe route
 
 ## Current Limitations
 
-- The patch does not add localization keys; the launcher label is effectively icon-first and the shell title is hardcoded `KlippyAI`.
+- The patch does not add localization keys; the launcher label is effectively icon-first and the shell title is hardcoded `KlipperAI`.
 - The patch is version-targeted to the upstream commit above and may need refreshing for future Mainsail releases.
 - The patch bundle does not rebuild or deploy Mainsail automatically.
-- The patch assumes the current `/klippyai` mount path.
+- The patch assumes the current `/klipperai` mount path.

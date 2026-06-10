@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-TITLE="KlippyAI"
-HREF="/klippyai/"
+TITLE="KlipperAI"
+HREF="/klipperai/"
 TARGET="_blank"
 POSITION="85"
 ICON=""
@@ -26,7 +26,7 @@ EOF
 }
 
 die() {
-  printf '[KlippyAI] error: %s\n' "$*" >&2
+  printf '[KlipperAI] error: %s\n' "$*" >&2
   exit 1
 }
 
@@ -144,7 +144,7 @@ output_file.write_text(json.dumps(filtered, indent=2) + "\n", encoding="utf-8")
 PY
 
 if [[ -f "$NAVI_FILE" ]] && cmp -s "$TMP_FILE" "$NAVI_FILE"; then
-  printf '[KlippyAI] Navigation entry already up to date: %s\n' "$NAVI_FILE"
+  printf '[KlipperAI] Navigation entry already up to date: %s\n' "$NAVI_FILE"
   exit 0
 fi
 
@@ -155,4 +155,4 @@ else
   install -m 644 "$TMP_FILE" "$NAVI_FILE"
 fi
 
-printf '[KlippyAI] Wrote %s\n' "$NAVI_FILE"
+printf '[KlipperAI] Wrote %s\n' "$NAVI_FILE"

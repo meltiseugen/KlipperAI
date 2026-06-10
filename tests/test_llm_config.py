@@ -2,27 +2,27 @@ from __future__ import annotations
 
 import pytest
 
-from klippyai_agent.llm import ConfigPromptPayload, StubConfigAssistantProvider
-from klippyai_agent.printerconfig import ConfigRequestTarget, ConfigSnapshot
-from klippyai_agent.printerprofile import PrinterProfile
+from klipperai_agent.llm import ConfigPromptPayload, StubConfigAssistantProvider
+from klipperai_agent.printerconfig import ConfigRequestTarget, ConfigSnapshot
+from klipperai_agent.printerprofile import PrinterProfile
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("feature", "expected_target"),
     [
-        ("fan", "klippyai/fan.cfg"),
-        ("macro", "klippyai/macros.cfg"),
-        ("sensor", "klippyai/sensor.cfg"),
-        ("probe", "klippyai/probe.cfg"),
-        ("heater", "klippyai/heater.cfg"),
-        ("input_shaper", "klippyai/input_shaper.cfg"),
-        ("bed_mesh", "klippyai/bed_mesh.cfg"),
-        ("filament", "klippyai/filament.cfg"),
-        ("canbus", "klippyai/canbus.cfg"),
-        ("stepper", "klippyai/stepper.cfg"),
-        ("extruder", "klippyai/extruder.cfg"),
-        ("generic", "klippyai/custom.cfg"),
+        ("fan", "klipperai/fan.cfg"),
+        ("macro", "klipperai/macros.cfg"),
+        ("sensor", "klipperai/sensor.cfg"),
+        ("probe", "klipperai/probe.cfg"),
+        ("heater", "klipperai/heater.cfg"),
+        ("input_shaper", "klipperai/input_shaper.cfg"),
+        ("bed_mesh", "klipperai/bed_mesh.cfg"),
+        ("filament", "klipperai/filament.cfg"),
+        ("canbus", "klipperai/canbus.cfg"),
+        ("stepper", "klipperai/stepper.cfg"),
+        ("extruder", "klipperai/extruder.cfg"),
+        ("generic", "klipperai/custom.cfg"),
     ],
 )
 async def test_stub_config_provider_returns_a_proposal_for_each_feature(

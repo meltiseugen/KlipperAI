@@ -4,14 +4,14 @@ import argparse
 import asyncio
 from pathlib import Path
 
-from klippyai_agent.moonraker import MoonrakerClient, MoonrakerError
-from klippyai_agent.printerconfig import ConfigCollector
-from klippyai_agent.printerprofile import PrinterProfileCollector, write_profile_to_cfg
+from klipperai_agent.moonraker import MoonrakerClient, MoonrakerError
+from klipperai_agent.printerconfig import ConfigCollector
+from klipperai_agent.printerprofile import PrinterProfileCollector, write_profile_to_cfg
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Detect printer profile data and persist it to klippyai.cfg.")
-    parser.add_argument("--config-file", required=True, help="Path to klippyai.cfg")
+    parser = argparse.ArgumentParser(description="Detect printer profile data and persist it to klipperai.cfg.")
+    parser.add_argument("--config-file", required=True, help="Path to klipperai.cfg")
     parser.add_argument("--moonraker-url", required=True, help="Moonraker base URL")
     parser.add_argument("--printer-data-root", required=True, help="Printer data root directory")
     parser.add_argument(
@@ -52,12 +52,12 @@ async def _run_detection(args: argparse.Namespace) -> int:
     )
 
     summary = profile.summary_label() or "no profile summary detected"
-    print(f"[KlippyAI] Detected printer profile: {summary}")
+    print(f"[KlipperAI] Detected printer profile: {summary}")
     if config_snapshot.root_file:
-        print(f"[KlippyAI] Active root config: {config_snapshot.root_file}")
+        print(f"[KlipperAI] Active root config: {config_snapshot.root_file}")
     if profile.notes:
         for note in profile.notes[:8]:
-            print(f"[KlippyAI] note: {note}")
+            print(f"[KlipperAI] note: {note}")
     return 0
 
 

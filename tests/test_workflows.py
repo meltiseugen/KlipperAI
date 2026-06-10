@@ -3,14 +3,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from klippyai_agent.hostlogs import HostLogCollector
-from klippyai_agent.printerconfig import ConfigCollector
-from klippyai_agent.printerconfig import ConfigSnapshot, infer_config_request_target
-from klippyai_agent.workflows import compose_config_response
-from klippyai_agent.workflows import compose_response
-from klippyai_agent.workflows import collect_config_context
-from klippyai_agent.workflows import detect_config_target
-from klippyai_agent.workflows import resolve_config_lookup
+from klipperai_agent.hostlogs import HostLogCollector
+from klipperai_agent.printerconfig import ConfigCollector
+from klipperai_agent.printerconfig import ConfigSnapshot, infer_config_request_target
+from klipperai_agent.workflows import compose_config_response
+from klipperai_agent.workflows import compose_response
+from klipperai_agent.workflows import collect_config_context
+from klipperai_agent.workflows import detect_config_target
+from klipperai_agent.workflows import resolve_config_lookup
 
 
 def test_compose_response_prefers_findings_and_keeps_output_compact() -> None:
@@ -57,7 +57,7 @@ def test_compose_config_response_keeps_text_short_and_avoids_code_duplication() 
                     {
                         "feature": "fan",
                         "title": "Generic PWM fan section",
-                        "target_file": "klippyai/fan.cfg",
+                        "target_file": "klipperai/fan.cfg",
                         "config": "[fan]\npin: <FAN_PIN>\n",
                         "rationale": "test",
                         "assumptions": ["A"],
@@ -77,7 +77,7 @@ def test_compose_config_response_keeps_text_short_and_avoids_code_duplication() 
     )
 
     assert "Proposal:" in result["response_text"]
-    assert "Generic PWM fan section -> klippyai/fan.cfg" in result["response_text"]
+    assert "Generic PWM fan section -> klipperai/fan.cfg" in result["response_text"]
     assert "```ini" not in result["response_text"]
     assert "Assumptions:" not in result["response_text"]
     assert "Warnings:" not in result["response_text"]

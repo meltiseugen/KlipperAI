@@ -2,14 +2,14 @@
 
 ## Goals
 
-KlippyAI should help users debug, fix, and improve Klipper/Kalico printers without becoming a second printer control plane. The system should remain operationally separate from Moonraker while using Moonraker as the canonical interface for printer data and actions.
+KlipperAI should help users debug, fix, and improve Klipper/Kalico printers without becoming a second printer control plane. The system should remain operationally separate from Moonraker while using Moonraker as the canonical interface for printer data and actions.
 
 ## Chosen Topology
 
 - Standalone host daemon
 - Moonraker integration underneath
 - Mainsail custom-navigation entry in `v1`
-- Same-origin KlippyAI UI at `/klippyai/`
+- Same-origin KlipperAI UI at `/klipperai/`
 
 ## Component Boundaries
 
@@ -40,14 +40,14 @@ Moonraker remains the printer-facing boundary for:
 The default `v1` Mainsail integration should stay intentionally small:
 
 - custom navigation entry in `.theme/navi.json`
-- link target to `/klippyai/`
+- link target to `/klipperai/`
 - no fork or patch required for the common install path
 
 An optional native shell patch can still exist for advanced installs, but the heavy UI should not live in the Mainsail codebase in `v1`.
 
-### 4. KlippyAI UI
+### 4. KlipperAI UI
 
-The KlippyAI UI is served on the same origin through `/klippyai/` and owns:
+The KlipperAI UI is served on the same origin through `/klipperai/` and owns:
 
 - chat transcript rendering
 - artifact paste and upload affordances

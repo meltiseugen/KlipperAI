@@ -5,7 +5,7 @@ This backlog is organized around the current chosen architecture:
 - standalone host daemon
 - Moonraker underneath
 - supported Mainsail custom-navigation entry in `v1`
-- same-origin KlippyAI page at `/klippyai/`
+- same-origin KlipperAI page at `/klipperai/`
 - LangGraph for explicit workflow orchestration
 
 ## Milestone 0: Project Foundation
@@ -43,11 +43,11 @@ This backlog is organized around the current chosen architecture:
 
 ## Milestone 3: Mainsail Integration
 
-- [x] Add a stable same-origin KlippyAI page at `/klippyai/`
-- [x] Add a low-coupling Mainsail custom-navigation link that opens KlippyAI
+- [x] Add a stable same-origin KlipperAI page at `/klipperai/`
+- [x] Add a low-coupling Mainsail custom-navigation link that opens KlipperAI
 - [x] Add installer support for writing `.theme/navi.json`
-- [ ] Ensure same-origin routing for `/klippyai/` behind nginx
-- [ ] Validate the full-page KlippyAI route on common desktop and tablet layouts
+- [ ] Ensure same-origin routing for `/klipperai/` behind nginx
+- [ ] Validate the full-page KlipperAI route on common desktop and tablet layouts
 - [ ] Improve the standalone page so it feels more at home inside the printer UI flow
 - [ ] Decide whether the optional native drawer patch still earns its maintenance cost
 
@@ -65,7 +65,7 @@ This backlog is organized around the current chosen architecture:
 - [ ] Create a config analysis workflow for active printer configuration
 - [ ] Detect common config mistakes such as missing includes, invalid pins, and conflicting sections
 - [x] Build typed proposal objects for generated config changes
-- [ ] Support managed include fragments under a KlippyAI-owned directory
+- [ ] Support managed include fragments under a KlipperAI-owned directory
 - [ ] Support patch generation against existing config files
 - [ ] Add config validation passes before any proposal is shown
 - [ ] Add deeper feature-specific generation beyond scaffold-level proposals
@@ -111,7 +111,7 @@ This backlog is organized around the current chosen architecture:
 
 - [ ] Add a Linux CI pipeline for lint, type checks, and tests
 - [ ] Add integration tests for installer, env generation, and service boot
-- [ ] Add a smoke test for reverse-proxy routing at `/klippyai/`
+- [ ] Add a smoke test for reverse-proxy routing at `/klipperai/`
 - [ ] Add example artifacts for known printer failures
 - [ ] Add versioning, changelog, and release notes conventions
 - [ ] Add packaging guidance for a one-line remote installer in a future release
@@ -123,4 +123,4 @@ This backlog is organized around the current chosen architecture:
 - [ ] Should a future native shell integration target Mainsail only, or keep Fluidd parity close behind?
 - [ ] What is the right long-term secret storage method for a local appliance-style install?
 - [ ] How should multi-printer hosts be modeled in the agent and UI?
-- [ ] Is a true native Mainsail drawer still worth carrying after the low-coupling `/klippyai/` flow is in use?
+- [ ] Is a true native Mainsail drawer still worth carrying after the low-coupling `/klipperai/` flow is in use?

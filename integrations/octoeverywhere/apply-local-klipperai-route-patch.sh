@@ -4,16 +4,16 @@ set -eu
 
 usage() {
   cat <<'EOF'
-Usage: apply-local-klippyai-route-patch.sh [options]
+Usage: apply-local-klipperai-route-patch.sh [options]
 
 Patch a local OctoEverywhere checkout so the main OctoEverywhere portal can
-forward /klippyai/... to the local KlippyAI backend and force a full browser
+forward /klipperai/... to the local KlipperAI backend and force a full browser
 navigation from the injected frontend helper.
 
 Options:
   --oe-root PATH          OctoEverywhere checkout root. Default: $HOME/octoeverywhere
-  --klippyai-prefix PATH  Public KlippyAI prefix. Default: /klippyai
-  --klippyai-port PORT    Local KlippyAI backend port. Default: 8811
+  --klipperai-prefix PATH  Public KlipperAI prefix. Default: /klipperai
+  --klipperai-port PORT    Local KlipperAI backend port. Default: 8811
   --nav-target VALUE      Sidebar click behavior: _blank or _self. Default: _blank
   --restart-service       Restart the OctoEverywhere systemd service after patching
   --service NAME          Service name to restart with --restart-service. Default: octoeverywhere
@@ -38,14 +38,14 @@ run_root() {
 }
 
 OE_ROOT="${HOME}/octoeverywhere"
-KLIPPYAI_PREFIX="/klippyai"
-KLIPPYAI_PORT="8811"
+KLIPPERAI_PREFIX="/klipperai"
+KLIPPERAI_PORT="8811"
 NAV_TARGET="_blank"
 RESTART_SERVICE=0
 OE_SERVICE="octoeverywhere"
 RESTORE_ORIGINAL=0
-SUSPEND_FILE="/etc/klippyai/octoeverywhere-reapply.suspended"
-BACKUP_DIR="/etc/klippyai/octoeverywhere-backups"
+SUSPEND_FILE="/etc/klipperai/octoeverywhere-reapply.suspended"
+BACKUP_DIR="/etc/klipperai/octoeverywhere-backups"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -53,12 +53,12 @@ while [ $# -gt 0 ]; do
       OE_ROOT="$2"
       shift 2
       ;;
-    --klippyai-prefix)
-      KLIPPYAI_PREFIX="$2"
+    --klipperai-prefix)
+      KLIPPERAI_PREFIX="$2"
       shift 2
       ;;
-    --klippyai-port)
-      KLIPPYAI_PORT="$2"
+    --klipperai-port)
+      KLIPPERAI_PORT="$2"
       shift 2
       ;;
     --nav-target)
@@ -89,24 +89,24 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-case "$KLIPPYAI_PREFIX" in
+case "$KLIPPERAI_PREFIX" in
   "")
-    KLIPPYAI_PREFIX="/klippyai"
+    KLIPPERAI_PREFIX="/klipperai"
     ;;
   /*)
     ;;
   *)
-    KLIPPYAI_PREFIX="/$KLIPPYAI_PREFIX"
+    KLIPPERAI_PREFIX="/$KLIPPERAI_PREFIX"
     ;;
 esac
 
-if [ "$KLIPPYAI_PREFIX" != "/" ]; then
-  KLIPPYAI_PREFIX="${KLIPPYAI_PREFIX%/}"
+if [ "$KLIPPERAI_PREFIX" != "/" ]; then
+  KLIPPERAI_PREFIX="${KLIPPERAI_PREFIX%/}"
 fi
 
-case "$KLIPPYAI_PORT" in
+case "$KLIPPERAI_PORT" in
   ''|*[!0-9]*)
-    printf 'Invalid --klippyai-port value: %s\n' "$KLIPPYAI_PORT" >&2
+    printf 'Invalid --klipperai-port value: %s\n' "$KLIPPERAI_PORT" >&2
     exit 1
     ;;
 esac
@@ -168,9 +168,9 @@ if [ "$RESTORE_ORIGINAL" -eq 1 ]; then
     moonraker_octoeverywhere/static/oe-ui.js
 
   {
-    printf 'KlippyAI OctoEverywhere auto-reapply is suspended for an OctoEverywhere update.\n'
+    printf 'KlipperAI OctoEverywhere auto-reapply is suspended for an OctoEverywhere update.\n'
     printf 'Created: %s\n' "$STAMP"
-    printf 'Reapply the KlippyAI patch after updating OctoEverywhere to remove this file.\n'
+    printf 'Reapply the KlipperAI patch after updating OctoEverywhere to remove this file.\n'
   } >"$SUSPEND_TMP"
   run_root install -d -m 755 "$(dirname "$SUSPEND_FILE")"
   run_root install -m 644 "$SUSPEND_TMP" "$SUSPEND_FILE"
@@ -185,7 +185,7 @@ if [ "$RESTORE_ORIGINAL" -eq 1 ]; then
   fi
   printf 'Next steps:\n'
   printf '  1. Update OctoEverywhere from Mainsail/Moonraker.\n'
-  printf '  2. Re-run this script without --restore-original to reapply KlippyAI.\n'
+  printf '  2. Re-run this script without --restore-original to reapply KlipperAI.\n'
   exit 0
 fi
 
@@ -193,8 +193,8 @@ OE_ROUTER_FILE="$ROUTER_FILE" \
 OE_UI_FILE="$UI_FILE" \
 OE_ROUTER_OUTPUT_FILE="$ROUTER_TMP" \
 OE_UI_OUTPUT_FILE="$UI_TMP" \
-KLIPPYAI_PREFIX="$KLIPPYAI_PREFIX" \
-KLIPPYAI_PORT="$KLIPPYAI_PORT" \
+KLIPPERAI_PREFIX="$KLIPPERAI_PREFIX" \
+KLIPPERAI_PORT="$KLIPPERAI_PORT" \
 NAV_TARGET="$NAV_TARGET" \
 python3 - <<'PY'
 from __future__ import annotations
@@ -219,59 +219,59 @@ router_file = Path(os.environ["OE_ROUTER_FILE"])
 ui_file = Path(os.environ["OE_UI_FILE"])
 router_output_file = Path(os.environ["OE_ROUTER_OUTPUT_FILE"])
 ui_output_file = Path(os.environ["OE_UI_OUTPUT_FILE"])
-klippyai_prefix = os.environ["KLIPPYAI_PREFIX"]
-klippyai_port = os.environ["KLIPPYAI_PORT"]
+klipperai_prefix = os.environ["KLIPPERAI_PREFIX"]
+klipperai_port = os.environ["KLIPPERAI_PORT"]
 nav_target = os.environ["NAV_TARGET"]
-klippyai_prefix_with_slash = klippyai_prefix if klippyai_prefix.endswith("/") else klippyai_prefix + "/"
+klipperai_prefix_with_slash = klipperai_prefix if klipperai_prefix.endswith("/") else klipperai_prefix + "/"
 
 router_text = router_file.read_text(encoding="utf-8")
 
-router_init_block = f"""        # KlippyAI local route patch init start
-        self.KlippyAiRootPath = "{klippyai_prefix}"
-        self.KlippyAiHostAndPortStr = "127.0.0.1:{klippyai_port}"
-        # KlippyAI local route patch init end
+router_init_block = f"""        # KlipperAI local route patch init start
+        self.KlipperAiRootPath = "{klipperai_prefix}"
+        self.KlipperAiHostAndPortStr = "127.0.0.1:{klipperai_port}"
+        # KlipperAI local route patch init end
 
 """
-router_helper_block = """    # KlippyAI local route patch helper start
-    def _MapKlippyAiPathIfNeeded(self, relativeUrl:str, protocol:str) -> Optional[str]:
+router_helper_block = """    # KlipperAI local route patch helper start
+    def _MapKlipperAiPathIfNeeded(self, relativeUrl:str, protocol:str) -> Optional[str]:
         if not relativeUrl:
             return None
         relativeUrlLower = relativeUrl.lower()
-        klippyAiRootPathLower = self.KlippyAiRootPath.lower()
-        if relativeUrlLower == klippyAiRootPathLower or relativeUrlLower.startswith(klippyAiRootPathLower + "/"):
-            suffix = relativeUrl[len(self.KlippyAiRootPath):]
+        klipperAiRootPathLower = self.KlipperAiRootPath.lower()
+        if relativeUrlLower == klipperAiRootPathLower or relativeUrlLower.startswith(klipperAiRootPathLower + "/"):
+            suffix = relativeUrl[len(self.KlipperAiRootPath):]
             if not suffix:
                 suffix = "/"
-            return protocol + self.KlippyAiHostAndPortStr + suffix
+            return protocol + self.KlipperAiHostAndPortStr + suffix
         return None
-    # KlippyAI local route patch helper end
+    # KlipperAI local route patch helper end
 
 """
-router_map_block = """            # KlippyAI local route patch map start
-            klippyAiUrl = self._MapKlippyAiPathIfNeeded(relativeUrl, protocol)
-            if klippyAiUrl is not None:
-                return klippyAiUrl
-            # KlippyAI local route patch map end
+router_map_block = """            # KlipperAI local route patch map start
+            klipperAiUrl = self._MapKlipperAiPathIfNeeded(relativeUrl, protocol)
+            if klipperAiUrl is not None:
+                return klipperAiUrl
+            # KlipperAI local route patch map end
 """
 
 router_text = replace_or_insert(
     router_text,
-    "        # KlippyAI local route patch init start",
-    "        # KlippyAI local route patch init end",
+    "        # KlipperAI local route patch init start",
+    "        # KlipperAI local route patch init end",
     router_init_block,
     '        self.Logger.info("MoonrakerApiRouter using bound to moonraker at "+self.MoonrakerHostAndPortStr)\n',
 )
 router_text = replace_or_insert(
     router_text,
-    "    # KlippyAI local route patch helper start",
-    "    # KlippyAI local route patch helper end",
+    "    # KlipperAI local route patch helper start",
+    "    # KlipperAI local route patch helper end",
     router_helper_block,
     "    # !! Interface Function !!",
 )
 router_text = replace_or_insert(
     router_text,
-    "            # KlippyAI local route patch map start",
-    "            # KlippyAI local route patch map end",
+    "            # KlipperAI local route patch map start",
+    "            # KlipperAI local route patch map end",
     router_map_block,
     "            relativeUrlLower = relativeUrl.lower()\n",
 )
@@ -279,13 +279,13 @@ router_output_file.write_text(router_text, encoding="utf-8")
 
 ui_text = ui_file.read_text(encoding="utf-8")
 if nav_target == "_blank":
-    navigation_action = """            oe_log("Opening KlippyAI in a new tab.");
-            var resolvedUrl = new URL(klippyAiHref, window.location.origin);
-            resolvedUrl.searchParams.set("_klippyai_nav", String(Date.now()));
+    navigation_action = """            oe_log("Opening KlipperAI in a new tab.");
+            var resolvedUrl = new URL(klipperAiHref, window.location.origin);
+            resolvedUrl.searchParams.set("_klipperai_nav", String(Date.now()));
             var popup = window.open("about:blank", "_blank");
             if(popup == null)
             {
-                oe_log("Browser blocked the KlippyAI popup.");
+                oe_log("Browser blocked the KlipperAI popup.");
             }
             else
             {
@@ -297,7 +297,7 @@ if nav_target == "_blank":
                 {
                     // Ignore cross-window opener assignment issues.
                 }
-                oe_open_klippyai_popup_directly(popup, resolvedUrl);
+                oe_open_klipperai_popup_directly(popup, resolvedUrl);
                 if(typeof popup.focus === "function")
                 {
                     popup.focus();
@@ -305,56 +305,56 @@ if nav_target == "_blank":
             }
 """
 else:
-    navigation_action = """            oe_log("Forcing full navigation for KlippyAI link.");
-            window.location.assign(klippyAiHref);
+    navigation_action = """            oe_log("Forcing full navigation for KlipperAI link.");
+            window.location.assign(klipperAiHref);
 """
 
-ui_block = f"""    // KlippyAI local route patch start
-    function oe_force_klippyai_full_navigation()
+ui_block = f"""    // KlipperAI local route patch start
+    function oe_force_klipperai_full_navigation()
     {{
         if(!oe_is_connected_via_oe())
         {{
             return;
         }}
 
-        var klippyAiHref = "{klippyai_prefix_with_slash}";
-        var klippyAiHrefNoSlash = klippyAiHref.endsWith("/") ? klippyAiHref.substring(0, klippyAiHref.length - 1) : klippyAiHref;
-        var klippyAiDirectHref = klippyAiHref + "direct";
+        var klipperAiHref = "{klipperai_prefix_with_slash}";
+        var klipperAiHrefNoSlash = klipperAiHref.endsWith("/") ? klipperAiHref.substring(0, klipperAiHref.length - 1) : klipperAiHref;
+        var klipperAiDirectHref = klipperAiHref + "direct";
 
-        async function oe_fetch_klippyai_html(reason)
+        async function oe_fetch_klipperai_html(reason)
         {{
-            var directUrl = new URL(klippyAiDirectHref, window.location.origin);
+            var directUrl = new URL(klipperAiDirectHref, window.location.origin);
             directUrl.searchParams.set(reason, String(Date.now()));
             var response = await fetch(directUrl.toString(), {{
                 cache: "no-store",
                 credentials: "same-origin",
                 headers: {{
                     "Accept": "text/html",
-                    "X-KlippyAI-Route-Rescue": "1"
+                    "X-KlipperAI-Route-Rescue": "1"
                 }}
             }});
 
             if(!response.ok)
             {{
-                throw new Error("KlippyAI direct route returned status " + response.status);
+                throw new Error("KlipperAI direct route returned status " + response.status);
             }}
 
             var html = await response.text();
-            if(html.indexOf("data-api-base=") === -1 || html.indexOf("KlippyAI") === -1)
+            if(html.indexOf("data-api-base=") === -1 || html.indexOf("KlipperAI") === -1)
             {{
-                throw new Error("KlippyAI direct route returned non-KlippyAI HTML.");
+                throw new Error("KlipperAI direct route returned non-KlipperAI HTML.");
             }}
             return html;
         }}
 
-        async function oe_open_klippyai_popup_directly(popup, visibleUrl)
+        async function oe_open_klipperai_popup_directly(popup, visibleUrl)
         {{
             try
             {{
-                var html = await oe_fetch_klippyai_html("_klippyai_direct_open");
+                var html = await oe_fetch_klipperai_html("_klipperai_direct_open");
                 try
                 {{
-                    popup.history.replaceState(null, "KlippyAI", visibleUrl.toString());
+                    popup.history.replaceState(null, "KlipperAI", visibleUrl.toString());
                 }}
                 catch(_historyError)
                 {{
@@ -366,12 +366,12 @@ ui_block = f"""    // KlippyAI local route patch start
             }}
             catch(error)
             {{
-                oe_log("KlippyAI direct popup load failed: " + error);
+                oe_log("KlipperAI direct popup load failed: " + error);
                 popup.location.replace(visibleUrl.toString());
             }}
         }}
 
-        function oe_reset_klippyai_nav_state(link)
+        function oe_reset_klipperai_nav_state(link)
         {{
             if(!(link instanceof HTMLElement))
             {{
@@ -417,7 +417,7 @@ ui_block = f"""    // KlippyAI local route patch start
             window.setTimeout(clearAll, 100);
         }}
 
-        function oe_klippyai_route_needs_rescue()
+        function oe_klipperai_route_needs_rescue()
         {{
             if(document.body instanceof HTMLElement && document.body.dataset && document.body.dataset.apiBase)
             {{
@@ -425,28 +425,28 @@ ui_block = f"""    // KlippyAI local route patch start
             }}
 
             var currentPath = window.location.pathname || "";
-            return currentPath === klippyAiHrefNoSlash || currentPath === klippyAiHref;
+            return currentPath === klipperAiHrefNoSlash || currentPath === klipperAiHref;
         }}
 
-        async function oe_rescue_klippyai_route_if_needed()
+        async function oe_rescue_klipperai_route_if_needed()
         {{
-            if(!oe_klippyai_route_needs_rescue())
+            if(!oe_klipperai_route_needs_rescue())
             {{
                 return;
             }}
 
-            oe_log("Rescuing /klippyai route from Mainsail shell.");
+            oe_log("Rescuing /klipperai route from Mainsail shell.");
 
             try
             {{
-                var html = await oe_fetch_klippyai_html("_klippyai_direct");
+                var html = await oe_fetch_klipperai_html("_klipperai_direct");
                 document.open();
                 document.write(html);
                 document.close();
             }}
             catch(error)
             {{
-                oe_log("KlippyAI route rescue failed: " + error);
+                oe_log("KlipperAI route rescue failed: " + error);
             }}
         }}
 
@@ -458,7 +458,7 @@ ui_block = f"""    // KlippyAI local route patch start
                 return;
             }}
 
-            var selector = 'a[href="' + klippyAiHrefNoSlash + '"], a[href="' + klippyAiHref + '"]';
+            var selector = 'a[href="' + klipperAiHrefNoSlash + '"], a[href="' + klipperAiHref + '"]';
             var link = target.closest(selector);
             if(link == null)
             {{
@@ -482,19 +482,19 @@ ui_block = f"""    // KlippyAI local route patch start
             }}
             event.cancelBubble = true;
             event.returnValue = false;
-            oe_reset_klippyai_nav_state(link);
+            oe_reset_klipperai_nav_state(link);
 {navigation_action.rstrip()}
         }}, true);
 
-        oe_rescue_klippyai_route_if_needed();
+        oe_rescue_klipperai_route_if_needed();
     }}
-    oe_force_klippyai_full_navigation();
-    // KlippyAI local route patch end
+    oe_force_klipperai_full_navigation();
+    // KlipperAI local route patch end
 """
 ui_text = replace_or_insert(
     ui_text,
-    "    // KlippyAI local route patch start",
-    "    // KlippyAI local route patch end",
+    "    // KlipperAI local route patch start",
+    "    // KlipperAI local route patch end",
     ui_block,
     "    oe_detect_oe_loaded_index_and_inject_helpers();\n",
 )
@@ -511,10 +511,10 @@ if ! cmp -s "$UI_FILE" "$UI_TMP"; then
 fi
 
 if [ "$ROUTER_CHANGED" -eq 0 ] && [ "$UI_CHANGED" -eq 0 ]; then
-  printf 'OctoEverywhere checkout already matches the KlippyAI patch: %s\n' "$OE_ROOT"
+  printf 'OctoEverywhere checkout already matches the KlipperAI patch: %s\n' "$OE_ROOT"
   printf '  Router file: %s\n' "$ROUTER_FILE"
   printf '  UI helper:   %s\n' "$UI_FILE"
-  printf '  Route:       %s/ -> http://127.0.0.1:%s/\n' "$KLIPPYAI_PREFIX" "$KLIPPYAI_PORT"
+  printf '  Route:       %s/ -> http://127.0.0.1:%s/\n' "$KLIPPERAI_PREFIX" "$KLIPPERAI_PORT"
   printf '  Nav target:  %s\n' "$NAV_TARGET"
   if [ "$RESTART_SERVICE" -eq 1 ]; then
     run_root systemctl restart "$OE_SERVICE"
@@ -540,7 +540,7 @@ fi
 printf 'Patched OctoEverywhere checkout at %s\n' "$OE_ROOT"
 printf '  Router file: %s\n' "$ROUTER_FILE"
 printf '  UI helper:   %s\n' "$UI_FILE"
-printf '  Route:       %s/ -> http://127.0.0.1:%s/\n' "$KLIPPYAI_PREFIX" "$KLIPPYAI_PORT"
+printf '  Route:       %s/ -> http://127.0.0.1:%s/\n' "$KLIPPERAI_PREFIX" "$KLIPPERAI_PORT"
 printf '  Nav target:  %s\n' "$NAV_TARGET"
 printf '  Router edit: %s\n' "$( [ "$ROUTER_CHANGED" -eq 1 ] && printf changed || printf unchanged )"
 printf '  UI edit:     %s\n' "$( [ "$UI_CHANGED" -eq 1 ] && printf changed || printf unchanged )"
@@ -559,5 +559,5 @@ fi
 
 printf 'Next steps:\n'
 printf '  1. Hard-refresh the OctoEverywhere portal.\n'
-printf '  2. Open %s/ through the main OctoEverywhere printer URL.\n' "$KLIPPYAI_PREFIX"
+printf '  2. Open %s/ through the main OctoEverywhere printer URL.\n' "$KLIPPERAI_PREFIX"
 printf '  3. If the browser still shows cached Mainsail shell content, retry in an incognito tab.\n'

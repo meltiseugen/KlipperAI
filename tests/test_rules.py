@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from klippyai_agent.diagnostics import RuleEngine
-from klippyai_agent.printerconfig import ConfigCollector
-from klippyai_agent.schemas import ArtifactInput
+from klipperai_agent.diagnostics import RuleEngine
+from klipperai_agent.printerconfig import ConfigCollector
+from klipperai_agent.schemas import ArtifactInput
 
 
 def test_timer_too_close_is_detected() -> None:

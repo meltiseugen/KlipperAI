@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from klippyai_agent.diagnostics import DiagnosticsCollector, RuleEngine
-from klippyai_agent.hostlogs import HostLogCollector
-from klippyai_agent.hostsystem import HostSystemCollector, SystemCommandRunner
-from klippyai_agent.llm import build_config_provider, build_diagnosis_provider, build_intent_router
-from klippyai_agent.moonraker import MoonrakerClient
-from klippyai_agent.printerconfig import ConfigCollector
-from klippyai_agent.printerprofile import build_profile_from_settings
-from klippyai_agent.services import ChatService
-from klippyai_agent.sessions import InMemorySessionStore
-from klippyai_agent.settings import Settings
-from klippyai_agent.workflows import WorkflowContext, build_config_graph, build_diagnosis_graph
+from klipperai_agent.diagnostics import DiagnosticsCollector, RuleEngine
+from klipperai_agent.hostlogs import HostLogCollector
+from klipperai_agent.hostsystem import HostSystemCollector, SystemCommandRunner
+from klipperai_agent.llm import build_config_provider, build_diagnosis_provider, build_intent_router
+from klipperai_agent.moonraker import MoonrakerClient
+from klipperai_agent.printerconfig import ConfigCollector
+from klipperai_agent.printerprofile import build_profile_from_settings
+from klipperai_agent.services import ChatService
+from klipperai_agent.sessions import InMemorySessionStore
+from klipperai_agent.settings import Settings
+from klipperai_agent.workflows import WorkflowContext, build_config_graph, build_diagnosis_graph
 
 
 @dataclass(slots=True)

@@ -204,7 +204,7 @@ class ConfigSnapshot:
         prefix_lower = prefix.lower()
         return any(section.lower().startswith(prefix_lower) for section in self.section_names)
 
-    def has_managed_include(self, include_name: str = "klippyai") -> bool:
+    def has_managed_include(self, include_name: str = "klipperai") -> bool:
         include_pattern = re.compile(
             rf"^\s*\[include\s+.*{re.escape(include_name)}.*\]\s*$",
             re.IGNORECASE | re.MULTILINE,

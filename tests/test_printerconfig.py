@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from klippyai_agent.printerconfig import (
+from klipperai_agent.printerconfig import (
     build_config_lookup_response,
     ConfigCollector,
     infer_config_request_target,
@@ -17,7 +17,7 @@ def test_config_collector_reads_printer_cfg_and_includes(tmp_path: Path) -> None
 
     (config_dir / "printer.cfg").write_text(
         "[include extras/fan.cfg]\n"
-        "[include klippyai/*.cfg]\n\n"
+        "[include klipperai/*.cfg]\n\n"
         "[printer]\n"
         "kinematics: cartesian\n",
         encoding="utf-8",
@@ -33,7 +33,7 @@ def test_config_collector_reads_printer_cfg_and_includes(tmp_path: Path) -> None
     assert snapshot.root_file is not None
     assert len(snapshot.documents) == 2
     assert snapshot.has_section_prefix("fan") is True
-    assert snapshot.has_managed_include("klippyai") is True
+    assert snapshot.has_managed_include("klipperai") is True
     assert snapshot.root_file == "printer.cfg"
     assert {document.path for document in snapshot.documents} == {"printer.cfg", "extras/fan.cfg"}
     assert str(tmp_path) not in snapshot.to_prompt_block()

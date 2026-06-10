@@ -1,4 +1,4 @@
-from klippyai_agent.sessions import InMemorySessionStore
+from klipperai_agent.sessions import InMemorySessionStore
 
 
 def test_session_roundtrip() -> None:

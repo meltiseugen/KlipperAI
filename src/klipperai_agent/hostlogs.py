@@ -5,7 +5,7 @@ from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
 
-from klippyai_agent.schemas import ArtifactInput, ArtifactKind
+from klipperai_agent.schemas import ArtifactInput, ArtifactKind
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,7 +18,7 @@ class HostLogCollector:
     _KNOWN_LOGS: dict[str, KnownLogKind] = {
         "klippy.log": KnownLogKind(kind="klippy_log", display_name="Klippy"),
         "moonraker.log": KnownLogKind(kind="moonraker_log", display_name="Moonraker"),
-        "klippyai.log": KnownLogKind(kind="system_log", display_name="KlippyAI"),
+        "klipperai.log": KnownLogKind(kind="system_log", display_name="KlipperAI"),
     }
 
     def __init__(

@@ -6,16 +6,16 @@ usage() {
   cat <<'EOF'
 Usage: install-auto-reapply.sh [options]
 
-Install a small systemd timer that checks whether the local KlippyAI
+Install a small systemd timer that checks whether the local KlipperAI
 OctoEverywhere route patch is still present. If an OctoEverywhere update
 replaces the patched files, the timer reapplies the patch and restarts
 OctoEverywhere.
 
 Options:
-  --install-dir PATH      KlippyAI checkout root. Default: auto-detected
+  --install-dir PATH      KlipperAI checkout root. Default: auto-detected
   --oe-root PATH          OctoEverywhere checkout root. Default: /usr/data/octoeverywhere
-  --klippyai-prefix PATH  Public KlippyAI prefix. Default: /klippyai
-  --klippyai-port PORT    Local KlippyAI backend port. Default: 8811
+  --klipperai-prefix PATH  Public KlipperAI prefix. Default: /klipperai
+  --klipperai-port PORT    Local KlipperAI backend port. Default: 8811
   --nav-target VALUE      Sidebar click behavior: _blank or _self. Default: _blank
   --service NAME          OctoEverywhere systemd service. Default: octoeverywhere
   --interval VALUE        systemd timer interval. Default: 30min
@@ -39,7 +39,7 @@ run_root() {
 }
 
 die() {
-  printf '[KlippyAI OE auto-reapply] error: %s\n' "$*" >&2
+  printf '[KlipperAI OE auto-reapply] error: %s\n' "$*" >&2
   exit 1
 }
 
@@ -54,15 +54,15 @@ ensure_no_spaces() {
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 INSTALL_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 OE_ROOT="/usr/data/octoeverywhere"
-KLIPPYAI_PREFIX="/klippyai"
-KLIPPYAI_PORT="8811"
+KLIPPERAI_PREFIX="/klipperai"
+KLIPPERAI_PORT="8811"
 NAV_TARGET="_blank"
 OE_SERVICE="octoeverywhere"
 CHECK_INTERVAL="30min"
-RUNNER_PATH="/usr/local/bin/klippyai-octoeverywhere-reapply"
+RUNNER_PATH="/usr/local/bin/klipperai-octoeverywhere-reapply"
 SYSTEMD_DIR="/etc/systemd/system"
-REAPPLY_SERVICE_NAME="klippyai-octoeverywhere-reapply.service"
-REAPPLY_TIMER_NAME="klippyai-octoeverywhere-reapply.timer"
+REAPPLY_SERVICE_NAME="klipperai-octoeverywhere-reapply.service"
+REAPPLY_TIMER_NAME="klipperai-octoeverywhere-reapply.timer"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -74,12 +74,12 @@ while [ $# -gt 0 ]; do
       OE_ROOT="$2"
       shift 2
       ;;
-    --klippyai-prefix)
-      KLIPPYAI_PREFIX="$2"
+    --klipperai-prefix)
+      KLIPPERAI_PREFIX="$2"
       shift 2
       ;;
-    --klippyai-port)
-      KLIPPYAI_PORT="$2"
+    --klipperai-port)
+      KLIPPERAI_PORT="$2"
       shift 2
       ;;
     --nav-target)
@@ -106,24 +106,24 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-case "$KLIPPYAI_PREFIX" in
+case "$KLIPPERAI_PREFIX" in
   "")
-    KLIPPYAI_PREFIX="/klippyai"
+    KLIPPERAI_PREFIX="/klipperai"
     ;;
   /*)
     ;;
   *)
-    KLIPPYAI_PREFIX="/$KLIPPYAI_PREFIX"
+    KLIPPERAI_PREFIX="/$KLIPPERAI_PREFIX"
     ;;
 esac
 
-if [ "$KLIPPYAI_PREFIX" != "/" ]; then
-  KLIPPYAI_PREFIX="${KLIPPYAI_PREFIX%/}"
+if [ "$KLIPPERAI_PREFIX" != "/" ]; then
+  KLIPPERAI_PREFIX="${KLIPPERAI_PREFIX%/}"
 fi
 
-case "$KLIPPYAI_PORT" in
+case "$KLIPPERAI_PORT" in
   ''|*[!0-9]*)
-    die "Invalid --klippyai-port value: $KLIPPYAI_PORT"
+    die "Invalid --klipperai-port value: $KLIPPERAI_PORT"
     ;;
 esac
 
@@ -137,11 +137,11 @@ esac
 
 ensure_no_spaces "--install-dir" "$INSTALL_DIR"
 ensure_no_spaces "--oe-root" "$OE_ROOT"
-ensure_no_spaces "--klippyai-prefix" "$KLIPPYAI_PREFIX"
+ensure_no_spaces "--klipperai-prefix" "$KLIPPERAI_PREFIX"
 ensure_no_spaces "--service" "$OE_SERVICE"
 ensure_no_spaces "--interval" "$CHECK_INTERVAL"
 
-[ -f "$INSTALL_DIR/integrations/octoeverywhere/apply-local-klippyai-route-patch.sh" ] || \
+[ -f "$INSTALL_DIR/integrations/octoeverywhere/apply-local-klipperai-route-patch.sh" ] || \
   die "Patch helper not found under $INSTALL_DIR"
 [ -d "$OE_ROOT" ] || die "OctoEverywhere checkout not found: $OE_ROOT"
 command -v systemctl >/dev/null 2>&1 || die "systemctl is required."
@@ -170,27 +170,27 @@ set -eu
 
 INSTALL_DIR="$INSTALL_DIR"
 OE_ROOT="$OE_ROOT"
-KLIPPYAI_PREFIX="$KLIPPYAI_PREFIX"
-KLIPPYAI_PORT="$KLIPPYAI_PORT"
+KLIPPERAI_PREFIX="$KLIPPERAI_PREFIX"
+KLIPPERAI_PORT="$KLIPPERAI_PORT"
 NAV_TARGET="$NAV_TARGET"
 OE_SERVICE="$OE_SERVICE"
-SUSPEND_FILE="/etc/klippyai/octoeverywhere-reapply.suspended"
+SUSPEND_FILE="/etc/klipperai/octoeverywhere-reapply.suspended"
 
 ROUTER_FILE="\$OE_ROOT/moonraker_octoeverywhere/moonrakerapirouter.py"
 UI_FILE="\$OE_ROOT/moonraker_octoeverywhere/static/oe-ui.js"
-PATCH_SCRIPT="\$INSTALL_DIR/integrations/octoeverywhere/apply-local-klippyai-route-patch.sh"
+PATCH_SCRIPT="\$INSTALL_DIR/integrations/octoeverywhere/apply-local-klipperai-route-patch.sh"
 
 log() {
-  printf '[KlippyAI OE auto-reapply] %s\n' "\$*"
+  printf '[KlipperAI OE auto-reapply] %s\n' "\$*"
 }
 
 patch_is_present() {
   [ -f "\$ROUTER_FILE" ] || return 1
   [ -f "\$UI_FILE" ] || return 1
-  grep -q "KlippyAI local route patch init start" "\$ROUTER_FILE" || return 1
-  grep -q "KlippyAI local route patch map start" "\$ROUTER_FILE" || return 1
-  grep -q "KlippyAI local route patch start" "\$UI_FILE" || return 1
-  grep -q "oe_open_klippyai_popup_directly" "\$UI_FILE" || return 1
+  grep -q "KlipperAI local route patch init start" "\$ROUTER_FILE" || return 1
+  grep -q "KlipperAI local route patch map start" "\$ROUTER_FILE" || return 1
+  grep -q "KlipperAI local route patch start" "\$UI_FILE" || return 1
+  grep -q "oe_open_klipperai_popup_directly" "\$UI_FILE" || return 1
   return 0
 }
 
@@ -212,8 +212,8 @@ fi
 log "OctoEverywhere patch is missing or incomplete; reapplying."
 sh "\$PATCH_SCRIPT" \
   --oe-root "\$OE_ROOT" \
-  --klippyai-prefix "\$KLIPPYAI_PREFIX" \
-  --klippyai-port "\$KLIPPYAI_PORT" \
+  --klipperai-prefix "\$KLIPPERAI_PREFIX" \
+  --klipperai-port "\$KLIPPERAI_PORT" \
   --nav-target "\$NAV_TARGET" \
   --restart-service \
   --service "\$OE_SERVICE"
@@ -221,7 +221,7 @@ EOF
 
 cat >"$SERVICE_TMP" <<EOF
 [Unit]
-Description=Reapply KlippyAI OctoEverywhere local route patch when missing
+Description=Reapply KlipperAI OctoEverywhere local route patch when missing
 After=network-online.target $OE_SERVICE_UNIT
 Wants=network-online.target
 
@@ -232,7 +232,7 @@ EOF
 
 cat >"$TIMER_TMP" <<EOF
 [Unit]
-Description=Check whether the KlippyAI OctoEverywhere patch still exists
+Description=Check whether the KlipperAI OctoEverywhere patch still exists
 
 [Timer]
 OnBootSec=2min
@@ -252,7 +252,7 @@ run_root systemctl daemon-reload
 run_root "$RUNNER_PATH"
 run_root systemctl enable --now "$REAPPLY_TIMER_NAME"
 
-printf '[KlippyAI OE auto-reapply] Installed %s\n' "$RUNNER_PATH"
-printf '[KlippyAI OE auto-reapply] Installed %s/%s\n' "$SYSTEMD_DIR" "$REAPPLY_SERVICE_NAME"
-printf '[KlippyAI OE auto-reapply] Installed %s/%s\n' "$SYSTEMD_DIR" "$REAPPLY_TIMER_NAME"
-printf '[KlippyAI OE auto-reapply] Timer interval: %s\n' "$CHECK_INTERVAL"
+printf '[KlipperAI OE auto-reapply] Installed %s\n' "$RUNNER_PATH"
+printf '[KlipperAI OE auto-reapply] Installed %s/%s\n' "$SYSTEMD_DIR" "$REAPPLY_SERVICE_NAME"
+printf '[KlipperAI OE auto-reapply] Installed %s/%s\n' "$SYSTEMD_DIR" "$REAPPLY_TIMER_NAME"
+printf '[KlipperAI OE auto-reapply] Timer interval: %s\n' "$CHECK_INTERVAL"

@@ -4,11 +4,10 @@ import logging
 
 import uvicorn
 
-from klippyai_agent.app import create_app
-from klippyai_agent.runtime_logging import configure_runtime_logging
-from klippyai_agent.settings import get_settings
+from klipperai_agent.runtime_logging import configure_runtime_logging
+from klipperai_agent.settings import get_settings
 
-logger = logging.getLogger("klippyai_agent.bootstrap")
+logger = logging.getLogger("klipperai_agent.bootstrap")
 
 
 def main() -> None:
@@ -16,7 +15,7 @@ def main() -> None:
     settings.ensure_directories()
     log_path = configure_runtime_logging(settings)
     logger.info(
-        "Starting KlippyAI host=%s port=%s root_path=%s moonraker_url=%s read_only=%s log_path=%s",
+        "Starting KlipperAI host=%s port=%s root_path=%s moonraker_url=%s read_only=%s log_path=%s",
         settings.host,
         settings.port,
         settings.root_path or "/",
@@ -25,7 +24,7 @@ def main() -> None:
         log_path or "stderr-only",
     )
     uvicorn.run(
-        "klippyai_agent.app:create_app",
+        "klipperai_agent.app:create_app",
         host=settings.host,
         port=settings.port,
         factory=True,

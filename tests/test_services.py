@@ -4,10 +4,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from klippyai_agent.printerprofile import PrinterProfile
-from klippyai_agent.schemas import ChatRequest
-from klippyai_agent.services import ChatService
-from klippyai_agent.sessions import InMemorySessionStore
+from klipperai_agent.printerprofile import PrinterProfile
+from klipperai_agent.schemas import ChatRequest
+from klipperai_agent.services import ChatService
+from klipperai_agent.sessions import InMemorySessionStore
 
 
 class _FakeGraph:
@@ -55,7 +55,7 @@ async def test_chat_service_routes_config_request_to_config_graph() -> None:
                 {
                     "feature": "fan",
                     "title": "Fan config",
-                    "target_file": "klippyai/fan.cfg",
+                    "target_file": "klipperai/fan.cfg",
                     "config": "[fan]\npin: PA1\n",
                     "rationale": "test",
                     "assumptions": [],

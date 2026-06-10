@@ -5,16 +5,16 @@ import re
 from dataclasses import dataclass
 from typing import Any, TypedDict
 
-from klippyai_agent.diagnostics import DiagnosticsCollector, DiagnosticsSnapshot, RuleEngine
-from klippyai_agent.hostlogs import HostLogCollector
-from klippyai_agent.intent import IntentRouterProvider
-from klippyai_agent.llm import (
+from klipperai_agent.diagnostics import DiagnosticsCollector, DiagnosticsSnapshot, RuleEngine
+from klipperai_agent.hostlogs import HostLogCollector
+from klipperai_agent.intent import IntentRouterProvider
+from klipperai_agent.llm import (
     ConfigAssistantProvider,
     ConfigPromptPayload,
     DiagnosisPromptPayload,
     DiagnosisProvider,
 )
-from klippyai_agent.printerconfig import (
+from klipperai_agent.printerconfig import (
     build_config_lookup_response,
     ConfigCollector,
     ConfigRequestTarget,
@@ -22,8 +22,8 @@ from klippyai_agent.printerconfig import (
     infer_config_request_target,
     looks_like_config_content_request,
 )
-from klippyai_agent.printerprofile import PrinterProfile
-from klippyai_agent.schemas import ArtifactInput, ConfigProposal, IssueFinding
+from klipperai_agent.printerprofile import PrinterProfile
+from klipperai_agent.schemas import ArtifactInput, ConfigProposal, IssueFinding
 
 
 @dataclass(slots=True)

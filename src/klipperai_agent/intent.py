@@ -5,8 +5,8 @@ from typing import Any, Literal, Protocol
 
 from pydantic import Field, validator
 
-from klippyai_agent.model_compat import BaseModel
-from klippyai_agent.printerconfig import infer_config_request_target, looks_like_config_request
+from klipperai_agent.model_compat import BaseModel
+from klipperai_agent.printerconfig import infer_config_request_target, looks_like_config_request
 
 
 ChatIntentName = Literal[

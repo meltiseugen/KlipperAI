@@ -2,15 +2,15 @@
 
 set -euo pipefail
 
-PROJECT_NAME="KlippyAI"
-SERVICE_NAME="klippyai-agent"
+PROJECT_NAME="KlipperAI"
+SERVICE_NAME="klipperai-agent"
 TIMESTAMP="$(date +%Y%m%d%H%M%S)"
-ENV_FILE="/etc/klippyai/klippyai.env"
+ENV_FILE="/etc/klipperai/klipperai.env"
 SYSTEMD_UNIT_PATH="/etc/systemd/system/${SERVICE_NAME}.service"
-NGINX_SNIPPET_PATH="/etc/klippyai/nginx-location.conf"
-OE_REAPPLY_RUNNER_PATH="/usr/local/bin/klippyai-octoeverywhere-reapply"
-OE_REAPPLY_SERVICE_NAME="klippyai-octoeverywhere-reapply.service"
-OE_REAPPLY_TIMER_NAME="klippyai-octoeverywhere-reapply.timer"
+NGINX_SNIPPET_PATH="/etc/klipperai/nginx-location.conf"
+OE_REAPPLY_RUNNER_PATH="/usr/local/bin/klipperai-octoeverywhere-reapply"
+OE_REAPPLY_SERVICE_NAME="klipperai-octoeverywhere-reapply.service"
+OE_REAPPLY_TIMER_NAME="klipperai-octoeverywhere-reapply.timer"
 OE_REAPPLY_SERVICE_PATH="/etc/systemd/system/${OE_REAPPLY_SERVICE_NAME}"
 OE_REAPPLY_TIMER_PATH="/etc/systemd/system/${OE_REAPPLY_TIMER_NAME}"
 
@@ -332,15 +332,15 @@ Uninstall summary
 -----------------
 Service unit:          $SYSTEMD_UNIT_PATH
 Env file:              $ENV_FILE
-KlippyAI cfg:          ${KLIPPYAI_CFG_PATH:-<not found>}
-Moonraker config:      ${KLIPPYAI_MOONRAKER_CONFIG_PATH:-<not found>}
-Moonraker include:     ${KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH:-<not found>}
-Allowed services file: ${KLIPPYAI_MOONRAKER_ALLOWED_SERVICES_PATH:-<not found>}
-Mainsail config dir:   ${KLIPPYAI_MAINSAIL_CONFIG_DIR:-<not found>}
-Managed config dir:    ${KLIPPYAI_MANAGED_CONFIG_DIR_PATH:-<not found>}
-Data dir:              ${KLIPPYAI_DATA_DIR:-<not found>}
-Project checkout:      ${KLIPPYAI_PROJECT_CHECKOUT_PATH:-<not found>}
-nginx server block:    ${KLIPPYAI_NGINX_SERVER_BLOCK_PATH:-<not found>}
+KlipperAI cfg:          ${KLIPPERAI_CFG_PATH:-<not found>}
+Moonraker config:      ${KLIPPERAI_MOONRAKER_CONFIG_PATH:-<not found>}
+Moonraker include:     ${KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH:-<not found>}
+Allowed services file: ${KLIPPERAI_MOONRAKER_ALLOWED_SERVICES_PATH:-<not found>}
+Mainsail config dir:   ${KLIPPERAI_MAINSAIL_CONFIG_DIR:-<not found>}
+Managed config dir:    ${KLIPPERAI_MANAGED_CONFIG_DIR_PATH:-<not found>}
+Data dir:              ${KLIPPERAI_DATA_DIR:-<not found>}
+Project checkout:      ${KLIPPERAI_PROJECT_CHECKOUT_PATH:-<not found>}
+nginx server block:    ${KLIPPERAI_NGINX_SERVER_BLOCK_PATH:-<not found>}
 Remove nav entry:      $REMOVE_MAINSAIL_NAV
 Remove nginx include:  $REMOVE_NGINX_INCLUDE
 Remove data dir:       $REMOVE_DATA_DIR
@@ -363,87 +363,87 @@ main() {
 
   log "Preparing uninstall."
 
-  KLIPPYAI_CFG_PATH="$(extract_env_value "$ENV_FILE" "KLIPPYAI_CONFIG_FILE" || true)"
-  if [[ -z "${KLIPPYAI_CFG_PATH:-}" ]]; then
-    KLIPPYAI_CFG_PATH="$(prompt_default "Path to klippyai.cfg" "/home/pi/printer_data/config/klippyai/klippyai.cfg")"
+  KLIPPERAI_CFG_PATH="$(extract_env_value "$ENV_FILE" "KLIPPERAI_CONFIG_FILE" || true)"
+  if [[ -z "${KLIPPERAI_CFG_PATH:-}" ]]; then
+    KLIPPERAI_CFG_PATH="$(prompt_default "Path to klipperai.cfg" "/home/pi/printer_data/config/klipperai/klipperai.cfg")"
   fi
 
-  KLIPPYAI_MAINSAIL_CONFIG_DIR="$(get_cfg_value "$KLIPPYAI_CFG_PATH" "install" "mainsail_config_dir" || true)"
-  KLIPPYAI_PRINTER_DATA_ROOT="$(get_cfg_value "$KLIPPYAI_CFG_PATH" "install" "printer_data_root" || true)"
-  KLIPPYAI_PROJECT_CHECKOUT_PATH="$(extract_env_value "$ENV_FILE" "KLIPPYAI_PROJECT_CHECKOUT_PATH" || true)"
-  if [[ -z "${KLIPPYAI_PROJECT_CHECKOUT_PATH:-}" ]]; then
-    KLIPPYAI_PROJECT_CHECKOUT_PATH="$(get_cfg_value "$KLIPPYAI_CFG_PATH" "install" "project_checkout_path" || true)"
+  KLIPPERAI_MAINSAIL_CONFIG_DIR="$(get_cfg_value "$KLIPPERAI_CFG_PATH" "install" "mainsail_config_dir" || true)"
+  KLIPPERAI_PRINTER_DATA_ROOT="$(get_cfg_value "$KLIPPERAI_CFG_PATH" "install" "printer_data_root" || true)"
+  KLIPPERAI_PROJECT_CHECKOUT_PATH="$(extract_env_value "$ENV_FILE" "KLIPPERAI_PROJECT_CHECKOUT_PATH" || true)"
+  if [[ -z "${KLIPPERAI_PROJECT_CHECKOUT_PATH:-}" ]]; then
+    KLIPPERAI_PROJECT_CHECKOUT_PATH="$(get_cfg_value "$KLIPPERAI_CFG_PATH" "install" "project_checkout_path" || true)"
   fi
-  KLIPPYAI_SERVICE_USER="$(extract_env_value "$ENV_FILE" "KLIPPYAI_SERVICE_USER" || true)"
-  if [[ -z "${KLIPPYAI_SERVICE_USER:-}" ]]; then
-    KLIPPYAI_SERVICE_USER="$(get_cfg_value "$KLIPPYAI_CFG_PATH" "install" "service_user" || true)"
+  KLIPPERAI_SERVICE_USER="$(extract_env_value "$ENV_FILE" "KLIPPERAI_SERVICE_USER" || true)"
+  if [[ -z "${KLIPPERAI_SERVICE_USER:-}" ]]; then
+    KLIPPERAI_SERVICE_USER="$(get_cfg_value "$KLIPPERAI_CFG_PATH" "install" "service_user" || true)"
   fi
-  KLIPPYAI_NGINX_SERVER_BLOCK_PATH="$(extract_env_value "$ENV_FILE" "KLIPPYAI_NGINX_SERVER_BLOCK_PATH" || true)"
-  if [[ -z "${KLIPPYAI_NGINX_SERVER_BLOCK_PATH:-}" ]]; then
-    KLIPPYAI_NGINX_SERVER_BLOCK_PATH="$(get_cfg_value "$KLIPPYAI_CFG_PATH" "install" "nginx_server_block_path" || true)"
+  KLIPPERAI_NGINX_SERVER_BLOCK_PATH="$(extract_env_value "$ENV_FILE" "KLIPPERAI_NGINX_SERVER_BLOCK_PATH" || true)"
+  if [[ -z "${KLIPPERAI_NGINX_SERVER_BLOCK_PATH:-}" ]]; then
+    KLIPPERAI_NGINX_SERVER_BLOCK_PATH="$(get_cfg_value "$KLIPPERAI_CFG_PATH" "install" "nginx_server_block_path" || true)"
   fi
-  KLIPPYAI_DATA_DIR="$(get_cfg_value "$KLIPPYAI_CFG_PATH" "server" "data_dir" || true)"
+  KLIPPERAI_DATA_DIR="$(get_cfg_value "$KLIPPERAI_CFG_PATH" "server" "data_dir" || true)"
 
-  if [[ -z "${KLIPPYAI_SERVICE_USER:-}" ]] && [[ -n "${SUDO_USER:-}" ]] && [[ "${SUDO_USER}" != "root" ]]; then
-    KLIPPYAI_SERVICE_USER="$SUDO_USER"
+  if [[ -z "${KLIPPERAI_SERVICE_USER:-}" ]] && [[ -n "${SUDO_USER:-}" ]] && [[ "${SUDO_USER}" != "root" ]]; then
+    KLIPPERAI_SERVICE_USER="$SUDO_USER"
   fi
-  if [[ -z "${KLIPPYAI_SERVICE_USER:-}" ]]; then
-    KLIPPYAI_SERVICE_USER="$(id -un)"
+  if [[ -z "${KLIPPERAI_SERVICE_USER:-}" ]]; then
+    KLIPPERAI_SERVICE_USER="$(id -un)"
   fi
-  KLIPPYAI_SERVICE_HOME="$(home_for_user "$KLIPPYAI_SERVICE_USER" || true)"
-  if [[ -z "${KLIPPYAI_SERVICE_HOME:-}" ]]; then
-    KLIPPYAI_SERVICE_HOME="/home/${KLIPPYAI_SERVICE_USER}"
-  fi
-
-  if [[ -z "${KLIPPYAI_MAINSAIL_CONFIG_DIR:-}" ]] && [[ -n "${KLIPPYAI_PRINTER_DATA_ROOT:-}" ]]; then
-    KLIPPYAI_MAINSAIL_CONFIG_DIR="${KLIPPYAI_PRINTER_DATA_ROOT%/}/config"
-  fi
-  if [[ -z "${KLIPPYAI_PRINTER_DATA_ROOT:-}" ]]; then
-    KLIPPYAI_PRINTER_DATA_ROOT="${KLIPPYAI_SERVICE_HOME%/}/printer_data"
-  fi
-  if [[ -z "${KLIPPYAI_PROJECT_CHECKOUT_PATH:-}" ]]; then
-    KLIPPYAI_PROJECT_CHECKOUT_PATH="${KLIPPYAI_SERVICE_HOME%/}/KlippyAI"
-  fi
-  if [[ -z "${KLIPPYAI_DATA_DIR:-}" ]]; then
-    KLIPPYAI_DATA_DIR="/var/lib/klippyai"
-  fi
-  if [[ -z "${KLIPPYAI_MAINSAIL_CONFIG_DIR:-}" ]]; then
-    KLIPPYAI_MAINSAIL_CONFIG_DIR="${KLIPPYAI_SERVICE_HOME%/}/printer_data/config"
-  fi
-  KLIPPYAI_MANAGED_CONFIG_DIR_NAME="$(extract_env_value "$ENV_FILE" "KLIPPYAI_MANAGED_CONFIG_DIR_NAME" || true)"
-  if [[ -z "${KLIPPYAI_MANAGED_CONFIG_DIR_NAME:-}" ]]; then
-    KLIPPYAI_MANAGED_CONFIG_DIR_NAME="klippyai"
-  fi
-  KLIPPYAI_MANAGED_CONFIG_DIR_PATH="${KLIPPYAI_CFG_PATH%/*}"
-  if [[ "$KLIPPYAI_MANAGED_CONFIG_DIR_PATH" == "$KLIPPYAI_MAINSAIL_CONFIG_DIR" ]]; then
-    KLIPPYAI_MANAGED_CONFIG_DIR_PATH="${KLIPPYAI_MAINSAIL_CONFIG_DIR%/}/$KLIPPYAI_MANAGED_CONFIG_DIR_NAME"
-  fi
-  if [[ -z "${KLIPPYAI_NGINX_SERVER_BLOCK_PATH:-}" ]]; then
-    KLIPPYAI_NGINX_SERVER_BLOCK_PATH="$(detect_nginx_server_block_path)"
+  KLIPPERAI_SERVICE_HOME="$(home_for_user "$KLIPPERAI_SERVICE_USER" || true)"
+  if [[ -z "${KLIPPERAI_SERVICE_HOME:-}" ]]; then
+    KLIPPERAI_SERVICE_HOME="/home/${KLIPPERAI_SERVICE_USER}"
   fi
 
-  KLIPPYAI_MOONRAKER_CONFIG_PATH="$(detect_moonraker_config_path "$KLIPPYAI_SERVICE_HOME" "$KLIPPYAI_MAINSAIL_CONFIG_DIR")"
-  KLIPPYAI_MOONRAKER_CONFIG_DIR="${KLIPPYAI_MOONRAKER_CONFIG_PATH%/*}"
-  KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH="${KLIPPYAI_MANAGED_CONFIG_DIR_PATH}/klippyai-moonraker.cfg"
-  KLIPPYAI_MOONRAKER_ALLOWED_SERVICES_PATH="${KLIPPYAI_PRINTER_DATA_ROOT%/}/moonraker.asvc"
-  KLIPPYAI_MAINSAIL_NAV_HREF="/klippyai/"
-  KLIPPYAI_UPDATE_RUNNER_PATH="/usr/local/bin/klippyai-self-update"
-  KLIPPYAI_UPDATE_SUDOERS_PATH="/etc/sudoers.d/klippyai-self-update"
-  KLIPPYAI_UPDATE_MACRO_CFG_PATH="${KLIPPYAI_MANAGED_CONFIG_DIR_PATH}/klippyai-macros.cfg"
-  if [[ ! -f "$KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH" && -f "${KLIPPYAI_MOONRAKER_CONFIG_DIR}/klippyai-moonraker.cfg" ]]; then
-    KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH="${KLIPPYAI_MOONRAKER_CONFIG_DIR}/klippyai-moonraker.cfg"
+  if [[ -z "${KLIPPERAI_MAINSAIL_CONFIG_DIR:-}" ]] && [[ -n "${KLIPPERAI_PRINTER_DATA_ROOT:-}" ]]; then
+    KLIPPERAI_MAINSAIL_CONFIG_DIR="${KLIPPERAI_PRINTER_DATA_ROOT%/}/config"
   fi
-  if [[ ! -f "$KLIPPYAI_UPDATE_MACRO_CFG_PATH" && -f "${KLIPPYAI_MAINSAIL_CONFIG_DIR%/}/klippyai-update-macro.cfg" ]]; then
-    KLIPPYAI_UPDATE_MACRO_CFG_PATH="${KLIPPYAI_MAINSAIL_CONFIG_DIR%/}/klippyai-update-macro.cfg"
+  if [[ -z "${KLIPPERAI_PRINTER_DATA_ROOT:-}" ]]; then
+    KLIPPERAI_PRINTER_DATA_ROOT="${KLIPPERAI_SERVICE_HOME%/}/printer_data"
   fi
-  KLIPPYAI_KLIPPER_ROOT_CONFIG_VALUE="$(get_cfg_value "$KLIPPYAI_CFG_PATH" "config_context" "root_config_file" || true)"
-  KLIPPYAI_KLIPPER_ROOT_CONFIG_VALUE="$(trim_whitespace "$KLIPPYAI_KLIPPER_ROOT_CONFIG_VALUE")"
-  if [[ -z "${KLIPPYAI_KLIPPER_ROOT_CONFIG_VALUE:-}" ]]; then
-    KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH="${KLIPPYAI_MAINSAIL_CONFIG_DIR%/}/printer.cfg"
-  elif [[ "$KLIPPYAI_KLIPPER_ROOT_CONFIG_VALUE" == /* ]]; then
-    KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH="$KLIPPYAI_KLIPPER_ROOT_CONFIG_VALUE"
+  if [[ -z "${KLIPPERAI_PROJECT_CHECKOUT_PATH:-}" ]]; then
+    KLIPPERAI_PROJECT_CHECKOUT_PATH="${KLIPPERAI_SERVICE_HOME%/}/KlipperAI"
+  fi
+  if [[ -z "${KLIPPERAI_DATA_DIR:-}" ]]; then
+    KLIPPERAI_DATA_DIR="/var/lib/klipperai"
+  fi
+  if [[ -z "${KLIPPERAI_MAINSAIL_CONFIG_DIR:-}" ]]; then
+    KLIPPERAI_MAINSAIL_CONFIG_DIR="${KLIPPERAI_SERVICE_HOME%/}/printer_data/config"
+  fi
+  KLIPPERAI_MANAGED_CONFIG_DIR_NAME="$(extract_env_value "$ENV_FILE" "KLIPPERAI_MANAGED_CONFIG_DIR_NAME" || true)"
+  if [[ -z "${KLIPPERAI_MANAGED_CONFIG_DIR_NAME:-}" ]]; then
+    KLIPPERAI_MANAGED_CONFIG_DIR_NAME="klipperai"
+  fi
+  KLIPPERAI_MANAGED_CONFIG_DIR_PATH="${KLIPPERAI_CFG_PATH%/*}"
+  if [[ "$KLIPPERAI_MANAGED_CONFIG_DIR_PATH" == "$KLIPPERAI_MAINSAIL_CONFIG_DIR" ]]; then
+    KLIPPERAI_MANAGED_CONFIG_DIR_PATH="${KLIPPERAI_MAINSAIL_CONFIG_DIR%/}/$KLIPPERAI_MANAGED_CONFIG_DIR_NAME"
+  fi
+  if [[ -z "${KLIPPERAI_NGINX_SERVER_BLOCK_PATH:-}" ]]; then
+    KLIPPERAI_NGINX_SERVER_BLOCK_PATH="$(detect_nginx_server_block_path)"
+  fi
+
+  KLIPPERAI_MOONRAKER_CONFIG_PATH="$(detect_moonraker_config_path "$KLIPPERAI_SERVICE_HOME" "$KLIPPERAI_MAINSAIL_CONFIG_DIR")"
+  KLIPPERAI_MOONRAKER_CONFIG_DIR="${KLIPPERAI_MOONRAKER_CONFIG_PATH%/*}"
+  KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH="${KLIPPERAI_MANAGED_CONFIG_DIR_PATH}/klipperai-moonraker.cfg"
+  KLIPPERAI_MOONRAKER_ALLOWED_SERVICES_PATH="${KLIPPERAI_PRINTER_DATA_ROOT%/}/moonraker.asvc"
+  KLIPPERAI_MAINSAIL_NAV_HREF="/klipperai/"
+  KLIPPERAI_UPDATE_RUNNER_PATH="/usr/local/bin/klipperai-self-update"
+  KLIPPERAI_UPDATE_SUDOERS_PATH="/etc/sudoers.d/klipperai-self-update"
+  KLIPPERAI_UPDATE_MACRO_CFG_PATH="${KLIPPERAI_MANAGED_CONFIG_DIR_PATH}/klipperai-macros.cfg"
+  if [[ ! -f "$KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH" && -f "${KLIPPERAI_MOONRAKER_CONFIG_DIR}/klipperai-moonraker.cfg" ]]; then
+    KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH="${KLIPPERAI_MOONRAKER_CONFIG_DIR}/klipperai-moonraker.cfg"
+  fi
+  if [[ ! -f "$KLIPPERAI_UPDATE_MACRO_CFG_PATH" && -f "${KLIPPERAI_MAINSAIL_CONFIG_DIR%/}/klipperai-update-macro.cfg" ]]; then
+    KLIPPERAI_UPDATE_MACRO_CFG_PATH="${KLIPPERAI_MAINSAIL_CONFIG_DIR%/}/klipperai-update-macro.cfg"
+  fi
+  KLIPPERAI_KLIPPER_ROOT_CONFIG_VALUE="$(get_cfg_value "$KLIPPERAI_CFG_PATH" "config_context" "root_config_file" || true)"
+  KLIPPERAI_KLIPPER_ROOT_CONFIG_VALUE="$(trim_whitespace "$KLIPPERAI_KLIPPER_ROOT_CONFIG_VALUE")"
+  if [[ -z "${KLIPPERAI_KLIPPER_ROOT_CONFIG_VALUE:-}" ]]; then
+    KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH="${KLIPPERAI_MAINSAIL_CONFIG_DIR%/}/printer.cfg"
+  elif [[ "$KLIPPERAI_KLIPPER_ROOT_CONFIG_VALUE" == /* ]]; then
+    KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH="$KLIPPERAI_KLIPPER_ROOT_CONFIG_VALUE"
   else
-    KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH="${KLIPPYAI_MAINSAIL_CONFIG_DIR%/}/$KLIPPYAI_KLIPPER_ROOT_CONFIG_VALUE"
+    KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH="${KLIPPERAI_MAINSAIL_CONFIG_DIR%/}/$KLIPPERAI_KLIPPER_ROOT_CONFIG_VALUE"
   fi
 
   if confirm "Remove the Mainsail custom-navigation entry?" "Y"; then
@@ -452,13 +452,13 @@ main() {
     REMOVE_MAINSAIL_NAV="no"
   fi
 
-  if [[ -f "${KLIPPYAI_NGINX_SERVER_BLOCK_PATH:-}" ]] && confirm "Remove the KlippyAI nginx include line from ${KLIPPYAI_NGINX_SERVER_BLOCK_PATH}?" "Y"; then
+  if [[ -f "${KLIPPERAI_NGINX_SERVER_BLOCK_PATH:-}" ]] && confirm "Remove the KlipperAI nginx include line from ${KLIPPERAI_NGINX_SERVER_BLOCK_PATH}?" "Y"; then
     REMOVE_NGINX_INCLUDE="yes"
   else
     REMOVE_NGINX_INCLUDE="no"
   fi
 
-  if confirm "Remove the KlippyAI data directory (${KLIPPYAI_DATA_DIR})?" "N"; then
+  if confirm "Remove the KlipperAI data directory (${KLIPPERAI_DATA_DIR})?" "N"; then
     REMOVE_DATA_DIR="yes"
   else
     REMOVE_DATA_DIR="no"
@@ -474,14 +474,14 @@ main() {
     die "Refusing to delete ${NGINX_SNIPPET_PATH} while keeping its nginx include line. Remove the include line first or keep the snippet file."
   fi
 
-  if confirm "Delete the project checkout directory (${KLIPPYAI_PROJECT_CHECKOUT_PATH})?" "N"; then
+  if confirm "Delete the project checkout directory (${KLIPPERAI_PROJECT_CHECKOUT_PATH})?" "N"; then
     REMOVE_CHECKOUT_DIR="yes"
   else
     REMOVE_CHECKOUT_DIR="no"
   fi
 
-  if [[ -f "$KLIPPYAI_UPDATE_MACRO_CFG_PATH" || -f "$KLIPPYAI_UPDATE_RUNNER_PATH" || -f "$KLIPPYAI_UPDATE_SUDOERS_PATH" ]]; then
-    if confirm "Remove the optional UPDATE_KLIPPYAI macro integration?" "Y"; then
+  if [[ -f "$KLIPPERAI_UPDATE_MACRO_CFG_PATH" || -f "$KLIPPERAI_UPDATE_RUNNER_PATH" || -f "$KLIPPERAI_UPDATE_SUDOERS_PATH" ]]; then
+    if confirm "Remove the optional UPDATE_KLIPPERAI macro integration?" "Y"; then
       REMOVE_UPDATE_MACRO_INTEGRATION="yes"
     else
       REMOVE_UPDATE_MACRO_INTEGRATION="no"
@@ -521,46 +521,46 @@ main() {
     run_root systemctl daemon-reload
   fi
 
-  if [[ "$REMOVE_MAINSAIL_NAV" == "yes" ]] && [[ -d "$KLIPPYAI_MAINSAIL_CONFIG_DIR" ]]; then
-    if command -v python3 >/dev/null 2>&1 && [[ -f "$KLIPPYAI_PROJECT_CHECKOUT_PATH/integrations/mainsail/uninstall-custom-nav.sh" ]]; then
-      if id "$KLIPPYAI_SERVICE_USER" >/dev/null 2>&1; then
-        run_as_user "$KLIPPYAI_SERVICE_USER" bash "$KLIPPYAI_PROJECT_CHECKOUT_PATH/integrations/mainsail/uninstall-custom-nav.sh" \
-          --config-dir "$KLIPPYAI_MAINSAIL_CONFIG_DIR" \
-          --href "$KLIPPYAI_MAINSAIL_NAV_HREF" \
-          --title "KlippyAI"
+  if [[ "$REMOVE_MAINSAIL_NAV" == "yes" ]] && [[ -d "$KLIPPERAI_MAINSAIL_CONFIG_DIR" ]]; then
+    if command -v python3 >/dev/null 2>&1 && [[ -f "$KLIPPERAI_PROJECT_CHECKOUT_PATH/integrations/mainsail/uninstall-custom-nav.sh" ]]; then
+      if id "$KLIPPERAI_SERVICE_USER" >/dev/null 2>&1; then
+        run_as_user "$KLIPPERAI_SERVICE_USER" bash "$KLIPPERAI_PROJECT_CHECKOUT_PATH/integrations/mainsail/uninstall-custom-nav.sh" \
+          --config-dir "$KLIPPERAI_MAINSAIL_CONFIG_DIR" \
+          --href "$KLIPPERAI_MAINSAIL_NAV_HREF" \
+          --title "KlipperAI"
       else
-        warn "Skipping Mainsail nav removal because the service user '$KLIPPYAI_SERVICE_USER' does not exist."
+        warn "Skipping Mainsail nav removal because the service user '$KLIPPERAI_SERVICE_USER' does not exist."
       fi
     else
       warn "Skipping Mainsail nav removal because python3 or uninstall-custom-nav.sh is unavailable."
     fi
   fi
 
-  if [[ -f "$KLIPPYAI_MOONRAKER_CONFIG_PATH" ]]; then
-    remove_line_from_file "$KLIPPYAI_MOONRAKER_CONFIG_PATH" "$(build_include_line "$KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH" "$KLIPPYAI_MOONRAKER_CONFIG_PATH")"
+  if [[ -f "$KLIPPERAI_MOONRAKER_CONFIG_PATH" ]]; then
+    remove_line_from_file "$KLIPPERAI_MOONRAKER_CONFIG_PATH" "$(build_include_line "$KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH" "$KLIPPERAI_MOONRAKER_CONFIG_PATH")"
   fi
-  remove_file_if_present "$KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH"
-  remove_line_from_file "$KLIPPYAI_MOONRAKER_ALLOWED_SERVICES_PATH" "$SERVICE_NAME"
-  remove_file_if_present "$KLIPPYAI_CFG_PATH"
+  remove_file_if_present "$KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH"
+  remove_line_from_file "$KLIPPERAI_MOONRAKER_ALLOWED_SERVICES_PATH" "$SERVICE_NAME"
+  remove_file_if_present "$KLIPPERAI_CFG_PATH"
   remove_file_if_present "$ENV_FILE"
 
   if [[ "$REMOVE_UPDATE_MACRO_INTEGRATION" == "yes" ]]; then
-    if [[ -f "$KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH" ]]; then
-      remove_line_from_file "$KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH" "$(build_include_line "$KLIPPYAI_UPDATE_MACRO_CFG_PATH" "$KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH")"
+    if [[ -f "$KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH" ]]; then
+      remove_line_from_file "$KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH" "$(build_include_line "$KLIPPERAI_UPDATE_MACRO_CFG_PATH" "$KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH")"
     fi
-    remove_file_if_present "$KLIPPYAI_UPDATE_MACRO_CFG_PATH"
-    remove_file_if_present "$KLIPPYAI_UPDATE_RUNNER_PATH"
-    remove_file_if_present "$KLIPPYAI_UPDATE_SUDOERS_PATH"
+    remove_file_if_present "$KLIPPERAI_UPDATE_MACRO_CFG_PATH"
+    remove_file_if_present "$KLIPPERAI_UPDATE_RUNNER_PATH"
+    remove_file_if_present "$KLIPPERAI_UPDATE_SUDOERS_PATH"
   fi
 
-  if [[ -n "${KLIPPYAI_MANAGED_CONFIG_DIR_PATH:-}" ]] && [[ -d "$KLIPPYAI_MANAGED_CONFIG_DIR_PATH" ]]; then
-    if [[ -z "$(find "$KLIPPYAI_MANAGED_CONFIG_DIR_PATH" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
-      remove_dir_if_present "$KLIPPYAI_MANAGED_CONFIG_DIR_PATH"
+  if [[ -n "${KLIPPERAI_MANAGED_CONFIG_DIR_PATH:-}" ]] && [[ -d "$KLIPPERAI_MANAGED_CONFIG_DIR_PATH" ]]; then
+    if [[ -z "$(find "$KLIPPERAI_MANAGED_CONFIG_DIR_PATH" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
+      remove_dir_if_present "$KLIPPERAI_MANAGED_CONFIG_DIR_PATH"
     fi
   fi
 
   if [[ "$REMOVE_NGINX_INCLUDE" == "yes" ]]; then
-    remove_trimmed_line_from_file "$KLIPPYAI_NGINX_SERVER_BLOCK_PATH" "include ${NGINX_SNIPPET_PATH};"
+    remove_trimmed_line_from_file "$KLIPPERAI_NGINX_SERVER_BLOCK_PATH" "include ${NGINX_SNIPPET_PATH};"
     log "Testing and reloading nginx."
     reload_nginx
   fi
@@ -570,15 +570,15 @@ main() {
   fi
 
   if [[ "$REMOVE_DATA_DIR" == "yes" ]]; then
-    remove_dir_if_present "$KLIPPYAI_DATA_DIR"
+    remove_dir_if_present "$KLIPPERAI_DATA_DIR"
   fi
 
   if [[ "$REMOVE_CHECKOUT_DIR" == "yes" ]]; then
-    if [[ -n "$KLIPPYAI_PROJECT_CHECKOUT_PATH" && "$KLIPPYAI_PROJECT_CHECKOUT_PATH" != "/" ]]; then
+    if [[ -n "$KLIPPERAI_PROJECT_CHECKOUT_PATH" && "$KLIPPERAI_PROJECT_CHECKOUT_PATH" != "/" ]]; then
       cd /
-      remove_dir_if_present "$KLIPPYAI_PROJECT_CHECKOUT_PATH"
+      remove_dir_if_present "$KLIPPERAI_PROJECT_CHECKOUT_PATH"
     else
-      warn "Refusing to remove an unsafe checkout path: ${KLIPPYAI_PROJECT_CHECKOUT_PATH:-<empty>}"
+      warn "Refusing to remove an unsafe checkout path: ${KLIPPERAI_PROJECT_CHECKOUT_PATH:-<empty>}"
     fi
   fi
 
@@ -588,10 +588,10 @@ Uninstall complete
 ------------------
 Removed:
 - systemd unit for ${SERVICE_NAME}
-- KlippyAI runtime config
+- KlipperAI runtime config
 - Moonraker include entry and allowed-services entry
-- KlippyAI environment file
-- optional UPDATE_KLIPPYAI macro artifacts when selected
+- KlipperAI environment file
+- optional UPDATE_KLIPPERAI macro artifacts when selected
 - optional OctoEverywhere auto-reapply artifacts when selected
 
 Manual follow-up:

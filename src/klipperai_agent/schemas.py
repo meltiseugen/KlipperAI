@@ -5,8 +5,8 @@ from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import Field, validator
-from klippyai_agent.model_compat import BaseModel
-from klippyai_agent.printerconfig import ConfigFeature
+from klipperai_agent.model_compat import BaseModel
+from klipperai_agent.printerconfig import ConfigFeature
 
 ArtifactKind = Literal[
     "klippy_log",

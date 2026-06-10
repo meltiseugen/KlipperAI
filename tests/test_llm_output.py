@@ -1,5 +1,5 @@
-from klippyai_agent.intent import ChatIntentOutput
-from klippyai_agent.llm import DiagnosisLLMOutput
+from klipperai_agent.intent import ChatIntentOutput
+from klipperai_agent.llm import DiagnosisLLMOutput
 
 
 def test_diagnosis_output_accepts_structured_list_items() -> None:

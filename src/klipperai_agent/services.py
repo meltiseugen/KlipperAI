@@ -5,8 +5,8 @@ import logging
 import re
 from uuid import uuid4
 
-from klippyai_agent.intent import ChatIntentOutput, classify_deterministic_intent, route_for_intent
-from klippyai_agent.schemas import (
+from klipperai_agent.intent import ChatIntentOutput, classify_deterministic_intent, route_for_intent
+from klipperai_agent.schemas import (
     ArtifactInput,
     BootstrapResponse,
     ChatRequest,
@@ -19,10 +19,10 @@ from klippyai_agent.schemas import (
     SourceCitation,
     UiSessionResponse,
 )
-from klippyai_agent.sessions import InMemorySessionStore
-from klippyai_agent.workflows import WorkflowContext
+from klipperai_agent.sessions import InMemorySessionStore
+from klipperai_agent.workflows import WorkflowContext
 
-logger = logging.getLogger("klippyai_agent.chat")
+logger = logging.getLogger("klipperai_agent.chat")
 
 _CONFIG_SECTION_PATTERN = re.compile(r"(?m)^\[[^\]\n]{1,160}\]\s*$")
 _LOG_LINE_PATTERN = re.compile(
@@ -221,7 +221,7 @@ def _format_conversation_context(history: list[ChatHistoryMessage], *, max_pairs
             continue
         if len(text) > _MAX_HISTORY_CHARS_PER_MESSAGE:
             text = f"{text[:_MAX_HISTORY_CHARS_PER_MESSAGE]}\n...[truncated]..."
-        role = "User" if item.role == "user" else "KlippyAI"
+        role = "User" if item.role == "user" else "KlipperAI"
         lines.append(f"{role}: {text}")
     return "\n\n".join(lines)
 

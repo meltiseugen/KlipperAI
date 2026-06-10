@@ -7,8 +7,8 @@ index 5d69637..de4080f 100644
          <template v-if="socketIsConnected && guiIsReady">
              <the-sidebar />
 -            <the-topbar />
-+            <the-topbar @toggle-klippyai="showKlippyAiShell = !showKlippyAiShell" />
-+            <klippy-ai-shell v-model="showKlippyAiShell" />
++            <the-topbar @toggle-klipperai="showKlipperAiShell = !showKlipperAiShell" />
++            <klipper-ai-shell v-model="showKlipperAiShell" />
              <v-main id="content" :style="mainStyle">
                  <v-container id="page-container" fluid :class="containerClasses">
                      <router-view />
@@ -16,11 +16,11 @@ index 5d69637..de4080f 100644
  import { setAndLoadLocale } from './plugins/i18n'
  import TheMacroPrompt from '@/components/dialogs/TheMacroPrompt.vue'
  import { AppRoute } from '@/routes'
-+import KlippyAiShell from '@/components/integrations/KlippyAiShell.vue'
++import KlipperAiShell from '@/components/integrations/KlipperAiShell.vue'
  
  @Component({
      components: {
-+        KlippyAiShell,
++        KlipperAiShell,
          TheMacroPrompt,
          TheTimelapseRenderingSnackbar,
          TheEditor,
@@ -28,7 +28,7 @@ index 5d69637..de4080f 100644
      },
  })
  export default class App extends Mixins(BaseMixin, ThemeMixin) {
-+    showKlippyAiShell = false
++    showKlipperAiShell = false
 +
      get title(): string {
          let title = this.$store.getters['getTitle']
@@ -41,7 +41,7 @@ index 6adc70e..a0fa630 100644
                  <v-icon class="mr-md-2">{{ mdiAlertOctagonOutline }}</v-icon>
                  <span class="d-none d-md-inline">{{ $t('App.TopBar.EmergencyStop') }}</span>
              </v-btn>
-+            <v-btn icon tile class="minwidth-0" title="KlippyAI" aria-label="Open KlippyAI" @click="$emit('toggle-klippyai')">
++            <v-btn icon tile class="minwidth-0" title="KlipperAI" aria-label="Open KlipperAI" @click="$emit('toggle-klipperai')">
 +                <v-icon>{{ mdiRobotOutline }}</v-icon>
 +            </v-btn>
              <the-notification-menu />
@@ -64,11 +64,11 @@ index 6adc70e..a0fa630 100644
  
      topbarHeight = topbarHeight
  
-diff --git a/src/components/integrations/KlippyAiShell.vue b/src/components/integrations/KlippyAiShell.vue
+diff --git a/src/components/integrations/KlipperAiShell.vue b/src/components/integrations/KlipperAiShell.vue
 new file mode 100644
 index 0000000..15545bb
 --- /dev/null
-+++ b/src/components/integrations/KlippyAiShell.vue
++++ b/src/components/integrations/KlipperAiShell.vue
 @@ -0,0 +1,176 @@
 +<template>
 +    <v-navigation-drawer
@@ -77,14 +77,14 @@ index 0000000..15545bb
 +        fixed
 +        right
 +        :width="drawerWidth"
-+        class="klippyai-shell"
++        class="klipperai-shell"
 +        :style="drawerStyle"
 +        @input="updateValue">
-+        <div class="klippyai-shell__column">
-+            <v-toolbar flat dense class="klippyai-shell__toolbar" :height="topbarHeight">
++        <div class="klipperai-shell__column">
++            <v-toolbar flat dense class="klipperai-shell__toolbar" :height="topbarHeight">
 +                <v-toolbar-title class="d-flex align-center">
 +                    <v-icon left>{{ mdiRobotOutline }}</v-icon>
-+                    <span>KlippyAI</span>
++                    <span>KlipperAI</span>
 +                </v-toolbar-title>
 +                <v-spacer />
 +                <v-btn icon tile :disabled="loading" @click="refreshSession">
@@ -95,19 +95,19 @@ index 0000000..15545bb
 +                </v-btn>
 +            </v-toolbar>
 +
-+            <div v-if="errorMessage" class="klippyai-shell__state px-4 py-5">
++            <div v-if="errorMessage" class="klipperai-shell__state px-4 py-5">
 +                <v-alert dense outlined type="error" class="mb-4">
 +                    {{ errorMessage }}
 +                </v-alert>
 +                <div class="text-body-2 text--secondary mb-4">
-+                    KlippyAI could not create a UI session. Check the reverse proxy and KlippyAI service.
++                    KlipperAI could not create a UI session. Check the reverse proxy and KlipperAI service.
 +                </div>
 +                <v-btn color="primary" :loading="loading" @click="refreshSession">Retry</v-btn>
 +            </div>
 +
-+            <div v-else-if="loading || !embedPath" class="klippyai-shell__state">
++            <div v-else-if="loading || !embedPath" class="klipperai-shell__state">
 +                <v-progress-circular indeterminate size="28" width="3" color="primary" class="mb-4" />
-+                <div class="text-subtitle-1 font-weight-medium">Starting KlippyAI</div>
++                <div class="text-subtitle-1 font-weight-medium">Starting KlipperAI</div>
 +                <div class="text-body-2 text--secondary mt-2">
 +                    Creating an embedded session for diagnostics and config assistance.
 +                </div>
@@ -117,8 +117,8 @@ index 0000000..15545bb
 +                v-else
 +                :key="iframeKey"
 +                :src="embedPath"
-+                title="KlippyAI"
-+                class="klippyai-shell__iframe"
++                title="KlipperAI"
++                class="klipperai-shell__iframe"
 +                sandbox="allow-downloads allow-forms allow-same-origin allow-scripts" />
 +        </div>
 +    </v-navigation-drawer>
@@ -131,14 +131,14 @@ index 0000000..15545bb
 +import { mdiCloseThick, mdiRefresh, mdiRobotOutline } from '@mdi/js'
 +import { topbarHeight } from '@/store/variables'
 +
-+interface KlippyAiUiSessionResponse {
++interface KlipperAiUiSessionResponse {
 +    session_id: string
 +    embed_path: string
 +    expires_at: string
 +}
 +
 +@Component
-+export default class KlippyAiShell extends Mixins(BaseMixin) {
++export default class KlipperAiShell extends Mixins(BaseMixin) {
 +    @Prop({ default: false }) declare readonly value: boolean
 +
 +    mdiCloseThick = mdiCloseThick
@@ -187,22 +187,22 @@ index 0000000..15545bb
 +        this.errorMessage = ''
 +
 +        try {
-+            const response = await fetch('/klippyai/api/ui-sessions', {
++            const response = await fetch('/klipperai/api/ui-sessions', {
 +                method: 'POST',
 +                headers: { Accept: 'application/json' },
 +            })
 +
 +            if (!response.ok) {
-+                throw new Error(`KlippyAI session bootstrap failed with status ${response.status}.`)
++                throw new Error(`KlipperAI session bootstrap failed with status ${response.status}.`)
 +            }
 +
-+            const payload = (await response.json()) as KlippyAiUiSessionResponse
++            const payload = (await response.json()) as KlipperAiUiSessionResponse
 +            this.embedPath = payload.embed_path
 +            this.iframeKey += 1
 +        } catch (error) {
 +            this.embedPath = null
 +            this.errorMessage =
-+                error instanceof Error ? error.message : 'KlippyAI session bootstrap failed unexpectedly.'
++                error instanceof Error ? error.message : 'KlipperAI session bootstrap failed unexpectedly.'
 +        } finally {
 +            this.loading = false
 +        }
@@ -211,34 +211,34 @@ index 0000000..15545bb
 +</script>
 +
 +<style scoped>
-+.klippyai-shell {
++.klipperai-shell {
 +    z-index: 9 !important;
 +}
 +
-+.klippyai-shell__column {
++.klipperai-shell__column {
 +    display: flex;
 +    flex-direction: column;
 +    height: 100%;
 +    background: var(--v-background-base);
 +}
 +
-+.klippyai-shell__toolbar {
++.klipperai-shell__toolbar {
 +    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 +    flex: 0 0 auto;
 +}
 +
-+html.theme--light .klippyai-shell__toolbar {
++html.theme--light .klipperai-shell__toolbar {
 +    border-bottom-color: rgba(0, 0, 0, 0.12);
 +}
 +
-+.klippyai-shell__state {
++.klipperai-shell__state {
 +    display: flex;
 +    flex: 1 1 auto;
 +    flex-direction: column;
 +    justify-content: center;
 +}
 +
-+.klippyai-shell__iframe {
++.klipperai-shell__iframe {
 +    display: block;
 +    flex: 1 1 auto;
 +    width: 100%;

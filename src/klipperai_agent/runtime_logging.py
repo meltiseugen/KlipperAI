@@ -4,7 +4,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from klippyai_agent.settings import Settings
+from klipperai_agent.settings import Settings
 
 _FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
 
@@ -37,8 +37,8 @@ def configure_runtime_logging(settings: Settings) -> Path | None:
         file_path = candidate
     except OSError as exc:
         logging.basicConfig(level=level, format=_FORMAT)
-        logging.getLogger("klippyai_agent.logging").warning(
-            "Could not open KlippyAI log file under %s: %s. Falling back to stderr/journal only.",
+        logging.getLogger("klipperai_agent.logging").warning(
+            "Could not open KlipperAI log file under %s: %s. Falling back to stderr/journal only.",
             settings.host_logs_dir(),
             exc,
         )
@@ -49,7 +49,7 @@ def configure_runtime_logging(settings: Settings) -> Path | None:
     for handler in handlers:
         root_logger.addHandler(handler)
 
-    for name in ("uvicorn", "uvicorn.error", "uvicorn.access", "klippyai_agent"):
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access", "klipperai_agent"):
         logger = logging.getLogger(name)
         logger.handlers.clear()
         logger.propagate = True
@@ -58,7 +58,7 @@ def configure_runtime_logging(settings: Settings) -> Path | None:
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     logging.getLogger("uvicorn.access").setLevel(logging.INFO)
 
-    logger = logging.getLogger("klippyai_agent.logging")
+    logger = logging.getLogger("klipperai_agent.logging")
     if file_path is not None:
         logger.info("Runtime logging configured at %s", file_path)
     else:

@@ -1,9 +1,9 @@
 #!/bin/sh
 
-if [ -z "${KLIPPYAI_INSTALL_BASH_REEXEC:-}" ]; then
+if [ -z "${KLIPPERAI_INSTALL_BASH_REEXEC:-}" ]; then
   if command -v bash >/dev/null 2>&1; then
-    KLIPPYAI_INSTALL_BASH_REEXEC=1
-    export KLIPPYAI_INSTALL_BASH_REEXEC
+    KLIPPERAI_INSTALL_BASH_REEXEC=1
+    export KLIPPERAI_INSTALL_BASH_REEXEC
     exec bash "$0" "$@"
   fi
 
@@ -18,23 +18,23 @@ if [ -z "${KLIPPYAI_INSTALL_BASH_REEXEC:-}" ]; then
   fi
 
   printf '%s\n' \
-    '[KlippyAI] error: this installer requires Bash, but bash was not found.' \
-    '[KlippyAI] Install Bash on the printer host, then rerun:' \
-    '[KlippyAI]   chmod +x install.sh' \
-    '[KlippyAI]   ./install.sh' \
-    '[KlippyAI]' \
-    '[KlippyAI] Suggested Bash install command for this host:' \
-    "[KlippyAI]   $bash_install_hint" \
-    '[KlippyAI]' \
-    '[KlippyAI] BusyBox/OpenWrt-style images may not provide apt or systemd.' \
-    '[KlippyAI] This installer expects a normal Klipper host with Bash, Python 3.10+, systemd, and nginx.' >&2
+    '[KlipperAI] error: this installer requires Bash, but bash was not found.' \
+    '[KlipperAI] Install Bash on the printer host, then rerun:' \
+    '[KlipperAI]   chmod +x install.sh' \
+    '[KlipperAI]   ./install.sh' \
+    '[KlipperAI]' \
+    '[KlipperAI] Suggested Bash install command for this host:' \
+    "[KlipperAI]   $bash_install_hint" \
+    '[KlipperAI]' \
+    '[KlipperAI] BusyBox/OpenWrt-style images may not provide apt or systemd.' \
+    '[KlipperAI] This installer expects a normal Klipper host with Bash, Python 3.10+, systemd, and nginx.' >&2
   exit 127
 fi
 
 set -euo pipefail
 
-PROJECT_NAME="KlippyAI"
-SERVICE_NAME="klippyai-agent"
+PROJECT_NAME="KlipperAI"
+SERVICE_NAME="klipperai-agent"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TIMESTAMP="$(date +%Y%m%d%H%M%S)"
 MIN_PYTHON_VERSION="3.10"
@@ -162,7 +162,7 @@ normalize_root_path() {
   value="/${value#/}"
   value="${value%/}"
   if [[ -z "$value" ]]; then
-    value="/klippyai"
+    value="/klipperai"
   fi
   printf '%s' "$value"
 }
@@ -199,10 +199,10 @@ detect_python_interpreter() {
   done
 
   if command -v python3 >/dev/null 2>&1; then
-    die "KlippyAI requires Python ${MIN_PYTHON_VERSION}+ but python3 is $(python_version_string python3). Install Python ${MIN_PYTHON_VERSION}+ and the matching venv module, or run ./deployment/python/install-python310.sh, then rerun."
+    die "KlipperAI requires Python ${MIN_PYTHON_VERSION}+ but python3 is $(python_version_string python3). Install Python ${MIN_PYTHON_VERSION}+ and the matching venv module, or run ./deployment/python/install-python310.sh, then rerun."
   fi
 
-  die "KlippyAI requires Python ${MIN_PYTHON_VERSION}+. Install it manually or run ./deployment/python/install-python310.sh."
+  die "KlipperAI requires Python ${MIN_PYTHON_VERSION}+. Install it manually or run ./deployment/python/install-python310.sh."
 }
 
 python_venv_package_name() {
@@ -235,7 +235,7 @@ maybe_install_python_packages() {
   fi
 
   if command -v apt-get >/dev/null 2>&1; then
-    if confirm "No Python 3 interpreter was found. Install the distro default python3, python3-venv, and python3-pip packages with apt? KlippyAI will verify that the version is ${MIN_PYTHON_VERSION}+." "Y"; then
+    if confirm "No Python 3 interpreter was found. Install the distro default python3, python3-venv, and python3-pip packages with apt? KlipperAI will verify that the version is ${MIN_PYTHON_VERSION}+." "Y"; then
       run_root apt-get update
       run_root apt-get install -y python3 python3-venv python3-pip
       return
@@ -709,14 +709,14 @@ detect_octoeverywhere_service_name() {
 
 detect_git_origin() {
   if ! command -v git >/dev/null 2>&1; then
-    printf '%s' "https://github.com/meltiseugen/KlippyAI.git"
+    printf '%s' "https://github.com/meltiseugen/KlipperAI.git"
     return
   fi
 
   local origin=""
   origin="$(git -C "$INSTALL_DIR" remote get-url origin 2>/dev/null || true)"
   if [[ -z "$origin" ]]; then
-    printf '%s' "https://github.com/meltiseugen/KlippyAI.git"
+    printf '%s' "https://github.com/meltiseugen/KlipperAI.git"
     return
   fi
 
@@ -764,26 +764,26 @@ write_env_file() {
   temp_file="$(mktemp)"
 
   {
-    printf 'KLIPPYAI_ENVIRONMENT="%s"\n' "$(escape_env_value "production")"
-    printf 'KLIPPYAI_CONFIG_FILE="%s"\n' "$(escape_env_value "$KLIPPYAI_CFG_PATH")"
-    printf 'KLIPPYAI_SERVICE_USER="%s"\n' "$(escape_env_value "$INSTALL_USER")"
-    printf 'KLIPPYAI_PROJECT_CHECKOUT_PATH="%s"\n' "$(escape_env_value "$INSTALL_DIR")"
-    printf 'KLIPPYAI_NGINX_SERVER_BLOCK_PATH="%s"\n' "$(escape_env_value "$KLIPPYAI_NGINX_SERVER_BLOCK_PATH")"
-    printf 'KLIPPYAI_HOST="%s"\n' "$(escape_env_value "127.0.0.1")"
-    printf 'KLIPPYAI_MOONRAKER_URL="%s"\n' "$(escape_env_value "$KLIPPYAI_MOONRAKER_URL")"
-    printf 'KLIPPYAI_MANAGED_CONFIG_DIR_NAME="%s"\n' "$(escape_env_value "$KLIPPYAI_MANAGED_CONFIG_DIR_NAME")"
-    printf 'KLIPPYAI_SESSION_TTL_SECONDS="%s"\n' "$(escape_env_value "3600")"
-    printf 'KLIPPYAI_MOONRAKER_SERVICE_NAME="%s"\n' "$(escape_env_value "$KLIPPYAI_MOONRAKER_SERVICE_NAME")"
-    printf 'KLIPPYAI_KLIPPER_SERVICE_NAME="%s"\n' "$(escape_env_value "$KLIPPYAI_KLIPPER_SERVICE_NAME")"
-    printf 'KLIPPYAI_SYSTEM_STATUS_ARTIFACT_CHAR_LIMIT="%s"\n' "$(escape_env_value "$KLIPPYAI_SYSTEM_STATUS_ARTIFACT_CHAR_LIMIT")"
-    printf 'KLIPPYAI_JOURNAL_ARTIFACT_CHAR_LIMIT="%s"\n' "$(escape_env_value "$KLIPPYAI_JOURNAL_ARTIFACT_CHAR_LIMIT")"
-    printf 'KLIPPYAI_SYSTEM_COMMAND_TIMEOUT_SECONDS="%s"\n' "$(escape_env_value "$KLIPPYAI_SYSTEM_COMMAND_TIMEOUT_SECONDS")"
-    printf 'KLIPPYAI_OPENAI_API_KEY="%s"\n' "$(escape_env_value "$KLIPPYAI_OPENAI_API_KEY")"
+    printf 'KLIPPERAI_ENVIRONMENT="%s"\n' "$(escape_env_value "production")"
+    printf 'KLIPPERAI_CONFIG_FILE="%s"\n' "$(escape_env_value "$KLIPPERAI_CFG_PATH")"
+    printf 'KLIPPERAI_SERVICE_USER="%s"\n' "$(escape_env_value "$INSTALL_USER")"
+    printf 'KLIPPERAI_PROJECT_CHECKOUT_PATH="%s"\n' "$(escape_env_value "$INSTALL_DIR")"
+    printf 'KLIPPERAI_NGINX_SERVER_BLOCK_PATH="%s"\n' "$(escape_env_value "$KLIPPERAI_NGINX_SERVER_BLOCK_PATH")"
+    printf 'KLIPPERAI_HOST="%s"\n' "$(escape_env_value "127.0.0.1")"
+    printf 'KLIPPERAI_MOONRAKER_URL="%s"\n' "$(escape_env_value "$KLIPPERAI_MOONRAKER_URL")"
+    printf 'KLIPPERAI_MANAGED_CONFIG_DIR_NAME="%s"\n' "$(escape_env_value "$KLIPPERAI_MANAGED_CONFIG_DIR_NAME")"
+    printf 'KLIPPERAI_SESSION_TTL_SECONDS="%s"\n' "$(escape_env_value "3600")"
+    printf 'KLIPPERAI_MOONRAKER_SERVICE_NAME="%s"\n' "$(escape_env_value "$KLIPPERAI_MOONRAKER_SERVICE_NAME")"
+    printf 'KLIPPERAI_KLIPPER_SERVICE_NAME="%s"\n' "$(escape_env_value "$KLIPPERAI_KLIPPER_SERVICE_NAME")"
+    printf 'KLIPPERAI_SYSTEM_STATUS_ARTIFACT_CHAR_LIMIT="%s"\n' "$(escape_env_value "$KLIPPERAI_SYSTEM_STATUS_ARTIFACT_CHAR_LIMIT")"
+    printf 'KLIPPERAI_JOURNAL_ARTIFACT_CHAR_LIMIT="%s"\n' "$(escape_env_value "$KLIPPERAI_JOURNAL_ARTIFACT_CHAR_LIMIT")"
+    printf 'KLIPPERAI_SYSTEM_COMMAND_TIMEOUT_SECONDS="%s"\n' "$(escape_env_value "$KLIPPERAI_SYSTEM_COMMAND_TIMEOUT_SECONDS")"
+    printf 'KLIPPERAI_OPENAI_API_KEY="%s"\n' "$(escape_env_value "$KLIPPERAI_OPENAI_API_KEY")"
   } >"$temp_file"
 
-  run_root install -d -m 755 /etc/klippyai
-  backup_file /etc/klippyai/klippyai.env
-  run_root install -m 600 "$temp_file" /etc/klippyai/klippyai.env
+  run_root install -d -m 755 /etc/klipperai
+  backup_file /etc/klipperai/klipperai.env
+  run_root install -m 600 "$temp_file" /etc/klipperai/klipperai.env
   rm -f "$temp_file"
 }
 
@@ -792,18 +792,18 @@ write_cfg_file() {
   temp_file="$(mktemp)"
 
   cat >"$temp_file" <<EOF
-# KlippyAI runtime configuration
+# KlipperAI runtime configuration
 #
 # This file is intended to be easy to edit from Mainsail.
 #
 # Notes:
-# - Restart klippyai-agent after editing this file.
-# - Hidden install metadata is stored in /etc/klippyai/klippyai.env.
-# - Keep API keys in /etc/klippyai/klippyai.env, not in this file.
+# - Restart klipperai-agent after editing this file.
+# - Hidden install metadata is stored in /etc/klipperai/klipperai.env.
+# - Keep API keys in /etc/klipperai/klipperai.env, not in this file.
 
 [install]
-printer_data_root: $KLIPPYAI_PRINTER_DATA_ROOT  # Printer data root. Example: /home/biqu/printer_data
-mainsail_config_dir: $KLIPPYAI_MAINSAIL_CONFIG_DIR  # Config dir that contains the managed klippyai/ folder. Example: /home/biqu/printer_data/config
+printer_data_root: $KLIPPERAI_PRINTER_DATA_ROOT  # Printer data root. Example: /home/biqu/printer_data
+mainsail_config_dir: $KLIPPERAI_MAINSAIL_CONFIG_DIR  # Config dir that contains the managed klipperai/ folder. Example: /home/biqu/printer_data/config
 
 [printer_identity]
 firmware_flavor:  # Main firmware flavor. Examples: Kalico, Klipper
@@ -827,40 +827,40 @@ root_config_file:  # Root Klipper config entry point. Examples: printer.cfg, mac
 ignore_globs:  # Comma-separated exclude globs. Examples: backups/**, archive/**, timelapse/**
 
 [server]
-port: $KLIPPYAI_PORT  # Local agent port. Examples: 8811, 9911
-root_path: $KLIPPYAI_ROOT_PATH  # Public reverse-proxy path. Examples: /klippyai, /ai
-data_dir: $KLIPPYAI_DATA_DIR  # Local runtime data directory. Examples: /var/lib/klippyai, /srv/klippyai/data
-checkpoint_db: $KLIPPYAI_CHECKPOINT_DB  # SQLite checkpoint DB path. Examples: /var/lib/klippyai/checkpoints.sqlite, /srv/klippyai/checkpoints.sqlite
-enable_write_actions: $KLIPPYAI_ENABLE_WRITE_ACTIONS  # Reserved for future write actions. Keep this false.
+port: $KLIPPERAI_PORT  # Local agent port. Examples: 8811, 9911
+root_path: $KLIPPERAI_ROOT_PATH  # Public reverse-proxy path. Examples: /klipperai, /ai
+data_dir: $KLIPPERAI_DATA_DIR  # Local runtime data directory. Examples: /var/lib/klipperai, /srv/klipperai/data
+checkpoint_db: $KLIPPERAI_CHECKPOINT_DB  # SQLite checkpoint DB path. Examples: /var/lib/klipperai/checkpoints.sqlite, /srv/klipperai/checkpoints.sqlite
+enable_write_actions: $KLIPPERAI_ENABLE_WRITE_ACTIONS  # Reserved for future write actions. Keep this false.
 
 [chat]
 conversation_history_pairs: 10  # Previous user/assistant pairs sent with each request. Use 0 to disable. Examples: 0, 5, 10
 
 [llm]
-llm_provider: $KLIPPYAI_LLM_PROVIDER  # Chat backend provider. Examples: stub, openai
-openai_model: $KLIPPYAI_OPENAI_MODEL  # OpenAI model when provider = openai. Examples: gpt-5.4-mini, gpt-5.5
+llm_provider: $KLIPPERAI_LLM_PROVIDER  # Chat backend provider. Examples: stub, openai
+openai_model: $KLIPPERAI_OPENAI_MODEL  # OpenAI model when provider = openai. Examples: gpt-5.4-mini, gpt-5.5
 
 [logs]
-collect_host_logs: $KLIPPYAI_COLLECT_HOST_LOGS  # Whether to collect host logs. Examples: true, false
-logs_dir_path: $KLIPPYAI_LOGS_DIR_PATH  # Directory that contains Klipper, Moonraker, and KlippyAI logs. Examples: /home/biqu/printer_data/logs, /srv/printer_data/logs
-agent_log_file_name: $KLIPPYAI_AGENT_LOG_FILE_NAME  # KlippyAI runtime log filename. Examples: klippyai.log, ai-agent.log
-agent_log_level: $KLIPPYAI_AGENT_LOG_LEVEL  # Runtime log verbosity. Examples: INFO, DEBUG, WARNING
-log_tail_lines_default: $KLIPPYAI_LOG_TAIL_LINES_DEFAULT  # Default tail length when no override exists. Examples: 100, 200
-excluded_logs:  # Comma-separated denylist by name, stem, or glob. Examples: klippyai.log, crowsnest, *_debug.log
+collect_host_logs: $KLIPPERAI_COLLECT_HOST_LOGS  # Whether to collect host logs. Examples: true, false
+logs_dir_path: $KLIPPERAI_LOGS_DIR_PATH  # Directory that contains Klipper, Moonraker, and KlipperAI logs. Examples: /home/biqu/printer_data/logs, /srv/printer_data/logs
+agent_log_file_name: $KLIPPERAI_AGENT_LOG_FILE_NAME  # KlipperAI runtime log filename. Examples: klipperai.log, ai-agent.log
+agent_log_level: $KLIPPERAI_AGENT_LOG_LEVEL  # Runtime log verbosity. Examples: INFO, DEBUG, WARNING
+log_tail_lines_default: $KLIPPERAI_LOG_TAIL_LINES_DEFAULT  # Default tail length when no override exists. Examples: 100, 200
+excluded_logs:  # Comma-separated denylist by name, stem, or glob. Examples: klipperai.log, crowsnest, *_debug.log
 
 [log_tail_lines]
 klippy: 100  # Tail lines for klippy.log
 moonraker: 200  # Tail lines for moonraker.log
-klippyai: 100  # Tail lines for klippyai.log
+klipperai: 100  # Tail lines for klipperai.log
 
 [system]
-collect_systemd_diagnostics: $KLIPPYAI_COLLECT_SYSTEMD_DIAGNOSTICS  # Whether to collect systemctl and journal diagnostics. Examples: true, false
-journal_lines: $KLIPPYAI_JOURNAL_LINES  # Journal lines to include per service. Examples: 100, 200, 400
+collect_systemd_diagnostics: $KLIPPERAI_COLLECT_SYSTEMD_DIAGNOSTICS  # Whether to collect systemctl and journal diagnostics. Examples: true, false
+journal_lines: $KLIPPERAI_JOURNAL_LINES  # Journal lines to include per service. Examples: 100, 200, 400
 EOF
 
-  run_root install -d -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 755 "$KLIPPYAI_MANAGED_CONFIG_DIR_PATH"
-  backup_file "$KLIPPYAI_CFG_PATH"
-  run_root install -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 664 "$temp_file" "$KLIPPYAI_CFG_PATH"
+  run_root install -d -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 755 "$KLIPPERAI_MANAGED_CONFIG_DIR_PATH"
+  backup_file "$KLIPPERAI_CFG_PATH"
+  run_root install -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 664 "$temp_file" "$KLIPPERAI_CFG_PATH"
   rm -f "$temp_file"
 }
 
@@ -869,25 +869,25 @@ write_moonraker_extension_cfg() {
   temp_file="$(mktemp)"
 
   cat >"$temp_file" <<EOF
-# KlippyAI Moonraker integration
+# KlipperAI Moonraker integration
 #
-# This file is included from moonraker.conf so that KlippyAI appears in
+# This file is included from moonraker.conf so that KlipperAI appears in
 # Moonraker's update manager and can be managed from Mainsail.
 
-[update_manager klippyai-agent]
+[update_manager klipperai-agent]
 type: git_repo
 channel: dev
 path: $INSTALL_DIR
-origin: $KLIPPYAI_GIT_ORIGIN
-primary_branch: $KLIPPYAI_GIT_PRIMARY_BRANCH
-managed_services: klippyai-agent
+origin: $KLIPPERAI_GIT_ORIGIN
+primary_branch: $KLIPPERAI_GIT_PRIMARY_BRANCH
+managed_services: klipperai-agent
 info_tags:
-    desc=KlippyAI
+    desc=KlipperAI
 EOF
 
-  run_root install -d -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 755 "$KLIPPYAI_MANAGED_CONFIG_DIR_PATH"
-  backup_file "$KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH"
-  run_root install -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 664 "$temp_file" "$KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH"
+  run_root install -d -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 755 "$KLIPPERAI_MANAGED_CONFIG_DIR_PATH"
+  backup_file "$KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH"
+  run_root install -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 664 "$temp_file" "$KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH"
   rm -f "$temp_file"
 }
 
@@ -939,14 +939,14 @@ read_ini_value() {
 resolve_klipper_root_config_path() {
   local root_value=""
 
-  root_value="$(read_ini_value "$KLIPPYAI_CFG_PATH" "config_context" "root_config_file" || true)"
+  root_value="$(read_ini_value "$KLIPPERAI_CFG_PATH" "config_context" "root_config_file" || true)"
   root_value="$(trim_whitespace "$root_value")"
   root_value="${root_value#\"}"
   root_value="${root_value%\"}"
   root_value="${root_value#\'}"
   root_value="${root_value%\'}"
   if [[ -z "$root_value" ]]; then
-    printf '%s' "$KLIPPYAI_MAINSAIL_CONFIG_DIR/printer.cfg"
+    printf '%s' "$KLIPPERAI_MAINSAIL_CONFIG_DIR/printer.cfg"
     return
   fi
 
@@ -955,7 +955,7 @@ resolve_klipper_root_config_path() {
     return
   fi
 
-  printf '%s/%s' "$KLIPPYAI_MAINSAIL_CONFIG_DIR" "$root_value"
+  printf '%s/%s' "$KLIPPERAI_MAINSAIL_CONFIG_DIR" "$root_value"
 }
 
 relative_config_include_path() {
@@ -980,19 +980,19 @@ build_include_line() {
 
 ensure_moonraker_include() {
   local include_line
-  include_line="$(build_include_line "$KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH" "$KLIPPYAI_MOONRAKER_CONFIG_PATH")"
-  local legacy_include_line="[include $(basename "$KLIPPYAI_LEGACY_MOONRAKER_EXTENSION_CFG_PATH")]"
+  include_line="$(build_include_line "$KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH" "$KLIPPERAI_MOONRAKER_CONFIG_PATH")"
+  local legacy_include_line="[include $(basename "$KLIPPERAI_LEGACY_MOONRAKER_EXTENSION_CFG_PATH")]"
 
-  [[ -f "$KLIPPYAI_MOONRAKER_CONFIG_PATH" ]] || die "Moonraker config file not found: $KLIPPYAI_MOONRAKER_CONFIG_PATH"
+  [[ -f "$KLIPPERAI_MOONRAKER_CONFIG_PATH" ]] || die "Moonraker config file not found: $KLIPPERAI_MOONRAKER_CONFIG_PATH"
   if [[ "$legacy_include_line" != "$include_line" ]]; then
-    remove_line_from_file_if_present "$KLIPPYAI_MOONRAKER_CONFIG_PATH" "$legacy_include_line"
+    remove_line_from_file_if_present "$KLIPPERAI_MOONRAKER_CONFIG_PATH" "$legacy_include_line"
   fi
-  if grep -Fqx "$include_line" "$KLIPPYAI_MOONRAKER_CONFIG_PATH"; then
+  if grep -Fqx "$include_line" "$KLIPPERAI_MOONRAKER_CONFIG_PATH"; then
     return
   fi
 
-  backup_file "$KLIPPYAI_MOONRAKER_CONFIG_PATH"
-  printf '\n%s\n' "$include_line" | run_root tee -a "$KLIPPYAI_MOONRAKER_CONFIG_PATH" >/dev/null
+  backup_file "$KLIPPERAI_MOONRAKER_CONFIG_PATH"
+  printf '\n%s\n' "$include_line" | run_root tee -a "$KLIPPERAI_MOONRAKER_CONFIG_PATH" >/dev/null
 }
 
 ensure_generic_include() {
@@ -1009,21 +1009,21 @@ ensure_generic_include() {
 }
 
 ensure_moonraker_allowed_service() {
-  if [[ -f "$KLIPPYAI_MOONRAKER_ALLOWED_SERVICES_PATH" ]] && grep -Fqx "$SERVICE_NAME" "$KLIPPYAI_MOONRAKER_ALLOWED_SERVICES_PATH"; then
+  if [[ -f "$KLIPPERAI_MOONRAKER_ALLOWED_SERVICES_PATH" ]] && grep -Fqx "$SERVICE_NAME" "$KLIPPERAI_MOONRAKER_ALLOWED_SERVICES_PATH"; then
     return
   fi
 
-  run_root install -d -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 755 "$KLIPPYAI_PRINTER_DATA_ROOT"
-  if [[ -f "$KLIPPYAI_MOONRAKER_ALLOWED_SERVICES_PATH" ]]; then
-    backup_file "$KLIPPYAI_MOONRAKER_ALLOWED_SERVICES_PATH"
-    printf '%s\n' "$SERVICE_NAME" | run_root tee -a "$KLIPPYAI_MOONRAKER_ALLOWED_SERVICES_PATH" >/dev/null
+  run_root install -d -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 755 "$KLIPPERAI_PRINTER_DATA_ROOT"
+  if [[ -f "$KLIPPERAI_MOONRAKER_ALLOWED_SERVICES_PATH" ]]; then
+    backup_file "$KLIPPERAI_MOONRAKER_ALLOWED_SERVICES_PATH"
+    printf '%s\n' "$SERVICE_NAME" | run_root tee -a "$KLIPPERAI_MOONRAKER_ALLOWED_SERVICES_PATH" >/dev/null
     return
   fi
 
   local temp_file
   temp_file="$(mktemp)"
   printf '%s\n' "$SERVICE_NAME" >"$temp_file"
-  run_root install -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 664 "$temp_file" "$KLIPPYAI_MOONRAKER_ALLOWED_SERVICES_PATH"
+  run_root install -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 664 "$temp_file" "$KLIPPERAI_MOONRAKER_ALLOWED_SERVICES_PATH"
   rm -f "$temp_file"
 }
 
@@ -1035,7 +1035,7 @@ write_systemd_service() {
 
   cat >"$temp_file" <<EOF
 [Unit]
-Description=KlippyAI agent
+Description=KlipperAI agent
 After=network-online.target moonraker.service
 Wants=network-online.target
 
@@ -1043,8 +1043,8 @@ Wants=network-online.target
 Type=simple
 User=$INSTALL_USER
 WorkingDirectory=$INSTALL_DIR
-EnvironmentFile=-/etc/klippyai/klippyai.env
-ExecStart=$INSTALL_DIR/.venv/bin/klippyai-agent
+EnvironmentFile=-/etc/klipperai/klipperai.env
+ExecStart=$INSTALL_DIR/.venv/bin/klipperai-agent
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=yes
@@ -1065,17 +1065,17 @@ write_nginx_snippet() {
   temp_file="$(mktemp)"
 
   cat >"$temp_file" <<EOF
-location ${KLIPPYAI_ROOT_PATH}/ {
+location ${KLIPPERAI_ROOT_PATH}/ {
     proxy_http_version 1.1;
     proxy_set_header Host \$host;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto \$scheme;
-    proxy_pass http://127.0.0.1:${KLIPPYAI_PORT}/;
+    proxy_pass http://127.0.0.1:${KLIPPERAI_PORT}/;
 }
 EOF
 
-  backup_file /etc/klippyai/nginx-location.conf
-  run_root install -m 644 "$temp_file" /etc/klippyai/nginx-location.conf
+  backup_file /etc/klipperai/nginx-location.conf
+  run_root install -m 644 "$temp_file" /etc/klipperai/nginx-location.conf
   rm -f "$temp_file"
 }
 
@@ -1088,7 +1088,7 @@ import urllib.request
 
 url = sys.argv[1]
 output_path = sys.argv[2]
-request = urllib.request.Request(url, headers={"User-Agent": "KlippyAI installer"})
+request = urllib.request.Request(url, headers={"User-Agent": "KlipperAI installer"})
 with urllib.request.urlopen(request, timeout=30) as response:
     data = response.read()
 text = data.decode("utf-8")
@@ -1100,9 +1100,9 @@ PY
 }
 
 install_gcode_shell_command_support() {
-  [[ -n "${KLIPPYAI_KLIPPER_CHECKOUT:-}" ]] || die "Klipper/Kalico checkout path is not set."
+  [[ -n "${KLIPPERAI_KLIPPER_CHECKOUT:-}" ]] || die "Klipper/Kalico checkout path is not set."
 
-  local extras_dir="$KLIPPYAI_KLIPPER_CHECKOUT/klippy/extras"
+  local extras_dir="$KLIPPERAI_KLIPPER_CHECKOUT/klippy/extras"
   local target_path="$extras_dir/gcode_shell_command.py"
   [[ -d "$extras_dir" ]] || die "Klipper extras directory not found: $extras_dir"
 
@@ -1153,34 +1153,34 @@ run_as_install_user() {
     return
   fi
 
-  printf 'KlippyAI update helper cannot switch to %s\\n' "\$INSTALL_USER" >&2
+  printf 'KlipperAI update helper cannot switch to %s\\n' "\$INSTALL_USER" >&2
   exit 1
 }
 
 [ -d "\$INSTALL_DIR/.git" ] || {
-  printf 'KlippyAI checkout is no longer a git repository: %s\\n' "\$INSTALL_DIR" >&2
+  printf 'KlipperAI checkout is no longer a git repository: %s\\n' "\$INSTALL_DIR" >&2
   exit 1
 }
 [ -x "\$INSTALL_DIR/.venv/bin/python" ] || {
-  printf 'KlippyAI virtual environment is missing: %s/.venv/bin/python\\n' "\$INSTALL_DIR" >&2
+  printf 'KlipperAI virtual environment is missing: %s/.venv/bin/python\\n' "\$INSTALL_DIR" >&2
   exit 1
 }
 
 run_as_install_user git -C "\$INSTALL_DIR" pull --ff-only
 run_as_install_user env SKIP_CYTHON=1 MARKUPSAFE_SKIP_SPEEDUPS=1 "\$INSTALL_DIR/.venv/bin/python" -m pip install --prefer-binary -e "\$INSTALL_DIR"
 systemctl restart "\$SERVICE_NAME"
-printf 'KlippyAI updated and %s restarted.\\n' "\$SERVICE_NAME"
+printf 'KlipperAI updated and %s restarted.\\n' "\$SERVICE_NAME"
 EOF
 
-  backup_file "$KLIPPYAI_UPDATE_RUNNER_PATH"
-  run_root install -d -m 755 "$(dirname "$KLIPPYAI_UPDATE_RUNNER_PATH")"
-  run_root install -m 755 "$temp_file" "$KLIPPYAI_UPDATE_RUNNER_PATH"
+  backup_file "$KLIPPERAI_UPDATE_RUNNER_PATH"
+  run_root install -d -m 755 "$(dirname "$KLIPPERAI_UPDATE_RUNNER_PATH")"
+  run_root install -m 755 "$temp_file" "$KLIPPERAI_UPDATE_RUNNER_PATH"
   rm -f "$temp_file"
 }
 
 write_update_sudoers_file() {
-  if [[ "${KLIPPYAI_UPDATE_MACRO_USES_SUDO:-yes}" != "yes" ]]; then
-    log "Skipping sudoers file because UPDATE_KLIPPYAI can run directly as root."
+  if [[ "${KLIPPERAI_UPDATE_MACRO_USES_SUDO:-yes}" != "yes" ]]; then
+    log "Skipping sudoers file because UPDATE_KLIPPERAI can run directly as root."
     return
   fi
 
@@ -1188,21 +1188,21 @@ write_update_sudoers_file() {
   temp_file="$(mktemp)"
 
   {
-    printf '%s ALL=(root) NOPASSWD: %s\n' "$KLIPPYAI_KLIPPER_SYSTEM_USER" "$KLIPPYAI_UPDATE_RUNNER_PATH"
-    if [[ "$INSTALL_USER" != "$KLIPPYAI_KLIPPER_SYSTEM_USER" ]]; then
-      printf '%s ALL=(root) NOPASSWD: %s\n' "$INSTALL_USER" "$KLIPPYAI_UPDATE_RUNNER_PATH"
+    printf '%s ALL=(root) NOPASSWD: %s\n' "$KLIPPERAI_KLIPPER_SYSTEM_USER" "$KLIPPERAI_UPDATE_RUNNER_PATH"
+    if [[ "$INSTALL_USER" != "$KLIPPERAI_KLIPPER_SYSTEM_USER" ]]; then
+      printf '%s ALL=(root) NOPASSWD: %s\n' "$INSTALL_USER" "$KLIPPERAI_UPDATE_RUNNER_PATH"
     fi
   } >"$temp_file"
 
   if command -v visudo >/dev/null 2>&1; then
     run_root visudo -cf "$temp_file" >/dev/null
   else
-    warn "visudo is not installed; skipping sudoers syntax validation for $KLIPPYAI_UPDATE_SUDOERS_PATH."
+    warn "visudo is not installed; skipping sudoers syntax validation for $KLIPPERAI_UPDATE_SUDOERS_PATH."
   fi
 
-  backup_file "$KLIPPYAI_UPDATE_SUDOERS_PATH"
-  run_root install -d -m 755 "$(dirname "$KLIPPYAI_UPDATE_SUDOERS_PATH")"
-  run_root install -m 440 "$temp_file" "$KLIPPYAI_UPDATE_SUDOERS_PATH"
+  backup_file "$KLIPPERAI_UPDATE_SUDOERS_PATH"
+  run_root install -d -m 755 "$(dirname "$KLIPPERAI_UPDATE_SUDOERS_PATH")"
+  run_root install -m 440 "$temp_file" "$KLIPPERAI_UPDATE_SUDOERS_PATH"
   rm -f "$temp_file"
 }
 
@@ -1211,44 +1211,44 @@ write_update_macro_cfg() {
   temp_file="$(mktemp)"
 
   cat >"$temp_file" <<EOF
-# KlippyAI self-update shell command
+# KlipperAI self-update shell command
 #
-# Generated by install.sh. The UPDATE_KLIPPYAI macro pulls the latest KlippyAI
+# Generated by install.sh. The UPDATE_KLIPPERAI macro pulls the latest KlipperAI
 # checkout, refreshes the editable install inside the virtual environment, and
-# restarts the klippyai-agent systemd service.
+# restarts the klipperai-agent systemd service.
 
-[gcode_shell_command klippyai_update]
-command: $KLIPPYAI_UPDATE_MACRO_COMMAND
+[gcode_shell_command klipperai_update]
+command: $KLIPPERAI_UPDATE_MACRO_COMMAND
 timeout: 600.
 verbose: True
 
-[gcode_macro UPDATE_KLIPPYAI]
-description: Pull the latest KlippyAI changes and restart klippyai-agent
+[gcode_macro UPDATE_KLIPPERAI]
+description: Pull the latest KlipperAI changes and restart klipperai-agent
 gcode:
-    RUN_SHELL_COMMAND CMD=klippyai_update
+    RUN_SHELL_COMMAND CMD=klipperai_update
 EOF
 
-  run_root install -d -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 755 "$KLIPPYAI_MANAGED_CONFIG_DIR_PATH"
-  backup_file "$KLIPPYAI_UPDATE_MACRO_CFG_PATH"
-  run_root install -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 664 "$temp_file" "$KLIPPYAI_UPDATE_MACRO_CFG_PATH"
+  run_root install -d -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 755 "$KLIPPERAI_MANAGED_CONFIG_DIR_PATH"
+  backup_file "$KLIPPERAI_UPDATE_MACRO_CFG_PATH"
+  run_root install -o "$INSTALL_USER" -g "$INSTALL_GROUP" -m 664 "$temp_file" "$KLIPPERAI_UPDATE_MACRO_CFG_PATH"
   rm -f "$temp_file"
 }
 
 install_update_macro_integration() {
-  KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH="$(resolve_klipper_root_config_path)"
-  if [[ ! -f "$KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH" ]]; then
-    warn "Skipping UPDATE_KLIPPYAI macro because the detected Klipper root config was not found: $KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH"
+  KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH="$(resolve_klipper_root_config_path)"
+  if [[ ! -f "$KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH" ]]; then
+    warn "Skipping UPDATE_KLIPPERAI macro because the detected Klipper root config was not found: $KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH"
     INSTALL_UPDATE_MACRO="skipped"
     return
   fi
 
-  KLIPPYAI_UPDATE_MACRO_USES_SUDO="yes"
-  KLIPPYAI_UPDATE_MACRO_COMMAND="sudo -n $KLIPPYAI_UPDATE_RUNNER_PATH"
-  if [[ "$KLIPPYAI_KLIPPER_SYSTEM_USER" == "root" ]]; then
-    KLIPPYAI_UPDATE_MACRO_USES_SUDO="no"
-    KLIPPYAI_UPDATE_MACRO_COMMAND="$KLIPPYAI_UPDATE_RUNNER_PATH"
+  KLIPPERAI_UPDATE_MACRO_USES_SUDO="yes"
+  KLIPPERAI_UPDATE_MACRO_COMMAND="sudo -n $KLIPPERAI_UPDATE_RUNNER_PATH"
+  if [[ "$KLIPPERAI_KLIPPER_SYSTEM_USER" == "root" ]]; then
+    KLIPPERAI_UPDATE_MACRO_USES_SUDO="no"
+    KLIPPERAI_UPDATE_MACRO_COMMAND="$KLIPPERAI_UPDATE_RUNNER_PATH"
   elif ! command -v sudo >/dev/null 2>&1; then
-    warn "Skipping UPDATE_KLIPPYAI macro because Klipper does not run as root and sudo is not installed."
+    warn "Skipping UPDATE_KLIPPERAI macro because Klipper does not run as root and sudo is not installed."
     INSTALL_UPDATE_MACRO="skipped"
     return
   fi
@@ -1256,18 +1256,18 @@ install_update_macro_integration() {
   write_update_runner_script
   write_update_sudoers_file
   write_update_macro_cfg
-  if [[ "$KLIPPYAI_LEGACY_UPDATE_MACRO_CFG_PATH" != "$KLIPPYAI_UPDATE_MACRO_CFG_PATH" ]]; then
-    remove_line_from_file_if_present "$KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH" "[include $(basename "$KLIPPYAI_LEGACY_UPDATE_MACRO_CFG_PATH")]"
-    retire_legacy_file_if_present "$KLIPPYAI_LEGACY_UPDATE_MACRO_CFG_PATH"
+  if [[ "$KLIPPERAI_LEGACY_UPDATE_MACRO_CFG_PATH" != "$KLIPPERAI_UPDATE_MACRO_CFG_PATH" ]]; then
+    remove_line_from_file_if_present "$KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH" "[include $(basename "$KLIPPERAI_LEGACY_UPDATE_MACRO_CFG_PATH")]"
+    retire_legacy_file_if_present "$KLIPPERAI_LEGACY_UPDATE_MACRO_CFG_PATH"
   fi
   ensure_generic_include \
-    "$KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH" \
-    "$(build_include_line "$KLIPPYAI_UPDATE_MACRO_CFG_PATH" "$KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH")"
+    "$KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH" \
+    "$(build_include_line "$KLIPPERAI_UPDATE_MACRO_CFG_PATH" "$KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH")"
 }
 
 ensure_nginx_include() {
-  local include_line="include /etc/klippyai/nginx-location.conf;"
-  local path="$KLIPPYAI_NGINX_SERVER_BLOCK_PATH"
+  local include_line="include /etc/klipperai/nginx-location.conf;"
+  local path="$KLIPPERAI_NGINX_SERVER_BLOCK_PATH"
 
   [[ -n "$path" ]] || die "nginx server block path is not set."
   [[ -f "$path" ]] || die "nginx server block file not found: $path"
@@ -1393,39 +1393,39 @@ reload_nginx() {
 }
 
 install_mainsail_custom_nav() {
-  [[ -n "${KLIPPYAI_MAINSAIL_CONFIG_DIR:-}" ]] || die "Mainsail config directory is not set."
-  [[ -d "$KLIPPYAI_MAINSAIL_CONFIG_DIR" ]] || die "Mainsail config directory does not exist: $KLIPPYAI_MAINSAIL_CONFIG_DIR"
+  [[ -n "${KLIPPERAI_MAINSAIL_CONFIG_DIR:-}" ]] || die "Mainsail config directory is not set."
+  [[ -d "$KLIPPERAI_MAINSAIL_CONFIG_DIR" ]] || die "Mainsail config directory does not exist: $KLIPPERAI_MAINSAIL_CONFIG_DIR"
 
-  local href="${KLIPPYAI_ROOT_PATH%/}/"
+  local href="${KLIPPERAI_ROOT_PATH%/}/"
   run_as_user bash "$INSTALL_DIR/integrations/mainsail/install-custom-nav.sh" \
-    --config-dir "$KLIPPYAI_MAINSAIL_CONFIG_DIR" \
+    --config-dir "$KLIPPERAI_MAINSAIL_CONFIG_DIR" \
     --href "$href" \
-    --title "KlippyAI" \
+    --title "KlipperAI" \
     --target "_blank" \
     --position 85
 }
 
 install_octoeverywhere_integration() {
-  [[ -n "${KLIPPYAI_OE_ROOT:-}" ]] || die "OctoEverywhere checkout path is not set."
-  local script_path="$INSTALL_DIR/integrations/octoeverywhere/apply-local-klippyai-route-patch.sh"
+  [[ -n "${KLIPPERAI_OE_ROOT:-}" ]] || die "OctoEverywhere checkout path is not set."
+  local script_path="$INSTALL_DIR/integrations/octoeverywhere/apply-local-klipperai-route-patch.sh"
   [[ -f "$script_path" ]] || die "OctoEverywhere integration helper not found: $script_path"
 
-  local cmd=(bash "$script_path" --oe-root "$KLIPPYAI_OE_ROOT" --klippyai-prefix "$KLIPPYAI_ROOT_PATH" --klippyai-port "$KLIPPYAI_PORT" --nav-target "_blank")
-  if [[ -n "${KLIPPYAI_OE_SERVICE_NAME:-}" ]]; then
-    cmd+=(--restart-service --service "$KLIPPYAI_OE_SERVICE_NAME")
+  local cmd=(bash "$script_path" --oe-root "$KLIPPERAI_OE_ROOT" --klipperai-prefix "$KLIPPERAI_ROOT_PATH" --klipperai-port "$KLIPPERAI_PORT" --nav-target "_blank")
+  if [[ -n "${KLIPPERAI_OE_SERVICE_NAME:-}" ]]; then
+    cmd+=(--restart-service --service "$KLIPPERAI_OE_SERVICE_NAME")
   fi
 
   "${cmd[@]}"
 }
 
 install_octoeverywhere_auto_reapply() {
-  [[ -n "${KLIPPYAI_OE_ROOT:-}" ]] || die "OctoEverywhere checkout path is not set."
+  [[ -n "${KLIPPERAI_OE_ROOT:-}" ]] || die "OctoEverywhere checkout path is not set."
   local script_path="$INSTALL_DIR/integrations/octoeverywhere/install-auto-reapply.sh"
   [[ -f "$script_path" ]] || die "OctoEverywhere auto-reapply helper not found: $script_path"
 
-  local cmd=(sh "$script_path" --install-dir "$INSTALL_DIR" --oe-root "$KLIPPYAI_OE_ROOT" --klippyai-prefix "$KLIPPYAI_ROOT_PATH" --klippyai-port "$KLIPPYAI_PORT" --nav-target "_blank")
-  if [[ -n "${KLIPPYAI_OE_SERVICE_NAME:-}" ]]; then
-    cmd+=(--service "$KLIPPYAI_OE_SERVICE_NAME")
+  local cmd=(sh "$script_path" --install-dir "$INSTALL_DIR" --oe-root "$KLIPPERAI_OE_ROOT" --klipperai-prefix "$KLIPPERAI_ROOT_PATH" --klipperai-port "$KLIPPERAI_PORT" --nav-target "_blank")
+  if [[ -n "${KLIPPERAI_OE_SERVICE_NAME:-}" ]]; then
+    cmd+=(--service "$KLIPPERAI_OE_SERVICE_NAME")
   fi
 
   "${cmd[@]}"
@@ -1438,22 +1438,22 @@ Install summary
 ---------------
 User:                 $INSTALL_USER
 Project checkout:     $INSTALL_DIR
-Moonraker URL:        $KLIPPYAI_MOONRAKER_URL
-Moonraker config:     $KLIPPYAI_MOONRAKER_CONFIG_PATH
-Printer data root:    $KLIPPYAI_PRINTER_DATA_ROOT
-Mainsail config dir:  $KLIPPYAI_MAINSAIL_CONFIG_DIR
-Managed config dir:   $KLIPPYAI_MANAGED_CONFIG_DIR_PATH
-KlippyAI cfg:         $KLIPPYAI_CFG_PATH
-Moonraker ext cfg:    $KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH
-Provider:             $KLIPPYAI_LLM_PROVIDER
-Model:                $KLIPPYAI_OPENAI_MODEL
-Root path:            $KLIPPYAI_ROOT_PATH
-nginx server block:   $KLIPPYAI_NGINX_SERVER_BLOCK_PATH
+Moonraker URL:        $KLIPPERAI_MOONRAKER_URL
+Moonraker config:     $KLIPPERAI_MOONRAKER_CONFIG_PATH
+Printer data root:    $KLIPPERAI_PRINTER_DATA_ROOT
+Mainsail config dir:  $KLIPPERAI_MAINSAIL_CONFIG_DIR
+Managed config dir:   $KLIPPERAI_MANAGED_CONFIG_DIR_PATH
+KlipperAI cfg:         $KLIPPERAI_CFG_PATH
+Moonraker ext cfg:    $KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH
+Provider:             $KLIPPERAI_LLM_PROVIDER
+Model:                $KLIPPERAI_OPENAI_MODEL
+Root path:            $KLIPPERAI_ROOT_PATH
+nginx server block:   $KLIPPERAI_NGINX_SERVER_BLOCK_PATH
 Patch nginx include:  $PATCH_NGINX_INCLUDE
-Local bind port:      $KLIPPYAI_PORT
-Data dir:             $KLIPPYAI_DATA_DIR
+Local bind port:      $KLIPPERAI_PORT
+Data dir:             $KLIPPERAI_DATA_DIR
 Runtime mode:         read-only
-KlippyAI log file:        $KLIPPYAI_LOGS_DIR_PATH/$KLIPPYAI_AGENT_LOG_FILE_NAME
+KlipperAI log file:        $KLIPPERAI_LOGS_DIR_PATH/$KLIPPERAI_AGENT_LOG_FILE_NAME
 Mainsail nav link:        $INSTALL_MAINSAIL_NAV
 gcode_shell_command:      $INSTALL_GCODE_SHELL_COMMAND
 Update macro:             $INSTALL_UPDATE_MACRO
@@ -1474,19 +1474,19 @@ main() {
   require_cmd stat
   require_cmd systemctl
 
-  [[ -f "$SCRIPT_DIR/pyproject.toml" ]] || die "Run this installer from a KlippyAI checkout."
+  [[ -f "$SCRIPT_DIR/pyproject.toml" ]] || die "Run this installer from a KlipperAI checkout."
 
   log "Preparing interactive installation."
 
   DEFAULT_INSTALL_USER="$(detect_default_install_user)"
-  INSTALL_USER="$(prompt_default "Linux user that should run the KlippyAI service" "$DEFAULT_INSTALL_USER")"
+  INSTALL_USER="$(prompt_default "Linux user that should run the KlipperAI service" "$DEFAULT_INSTALL_USER")"
   id "$INSTALL_USER" >/dev/null 2>&1 || die "User '$INSTALL_USER' does not exist."
 
   INSTALL_HOME="$(home_for_user "$INSTALL_USER")"
   [[ -n "$INSTALL_HOME" ]] || die "Could not determine the home directory for '$INSTALL_USER'."
   INSTALL_GROUP="$(group_for_user "$INSTALL_USER")"
 
-  STANDARD_INSTALL_DIR="$INSTALL_HOME/KlippyAI"
+  STANDARD_INSTALL_DIR="$INSTALL_HOME/KlipperAI"
   INSTALL_DIR="$(prompt_default "Project checkout path to install from" "$STANDARD_INSTALL_DIR")"
   ensure_no_spaces "$INSTALL_DIR" "Project checkout path"
   [[ -f "$INSTALL_DIR/pyproject.toml" ]] || die "No pyproject.toml found in $INSTALL_DIR."
@@ -1495,66 +1495,66 @@ main() {
   run_as_user test -w "$INSTALL_DIR" || die "User '$INSTALL_USER' must be able to write to $INSTALL_DIR."
 
   DEFAULT_PRINTER_DATA_ROOT="$(detect_printer_data_root "$INSTALL_HOME")"
-  KLIPPYAI_PRINTER_DATA_ROOT="$(prompt_default "Printer data root" "$DEFAULT_PRINTER_DATA_ROOT")"
-  ensure_no_spaces "$KLIPPYAI_PRINTER_DATA_ROOT" "Printer data root"
-  KLIPPYAI_MAINSAIL_CONFIG_DIR="$(prompt_default "Mainsail config directory" "$KLIPPYAI_PRINTER_DATA_ROOT/config")"
-  ensure_no_spaces "$KLIPPYAI_MAINSAIL_CONFIG_DIR" "Mainsail config directory"
-  KLIPPYAI_MANAGED_CONFIG_DIR_NAME="klippyai"
-  KLIPPYAI_MANAGED_CONFIG_DIR_PATH="$KLIPPYAI_MAINSAIL_CONFIG_DIR/$KLIPPYAI_MANAGED_CONFIG_DIR_NAME"
-  KLIPPYAI_CFG_PATH="$KLIPPYAI_MANAGED_CONFIG_DIR_PATH/klippyai.cfg"
-  KLIPPYAI_LEGACY_CFG_PATH="$KLIPPYAI_MAINSAIL_CONFIG_DIR/klippyai.cfg"
-  KLIPPYAI_MOONRAKER_CONFIG_PATH="$(detect_moonraker_config_path "$INSTALL_HOME" "$KLIPPYAI_MAINSAIL_CONFIG_DIR")"
-  [[ -f "$KLIPPYAI_MOONRAKER_CONFIG_PATH" ]] || die "Moonraker config file not found: $KLIPPYAI_MOONRAKER_CONFIG_PATH"
-  KLIPPYAI_MOONRAKER_CONFIG_DIR="${KLIPPYAI_MOONRAKER_CONFIG_PATH%/*}"
-  KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH="$KLIPPYAI_MANAGED_CONFIG_DIR_PATH/klippyai-moonraker.cfg"
-  KLIPPYAI_LEGACY_MOONRAKER_EXTENSION_CFG_PATH="$KLIPPYAI_MOONRAKER_CONFIG_DIR/klippyai-moonraker.cfg"
-  KLIPPYAI_MOONRAKER_ALLOWED_SERVICES_PATH="$KLIPPYAI_PRINTER_DATA_ROOT/moonraker.asvc"
-  KLIPPYAI_GIT_ORIGIN="$(detect_git_origin)"
-  KLIPPYAI_GIT_PRIMARY_BRANCH="$(detect_git_primary_branch)"
+  KLIPPERAI_PRINTER_DATA_ROOT="$(prompt_default "Printer data root" "$DEFAULT_PRINTER_DATA_ROOT")"
+  ensure_no_spaces "$KLIPPERAI_PRINTER_DATA_ROOT" "Printer data root"
+  KLIPPERAI_MAINSAIL_CONFIG_DIR="$(prompt_default "Mainsail config directory" "$KLIPPERAI_PRINTER_DATA_ROOT/config")"
+  ensure_no_spaces "$KLIPPERAI_MAINSAIL_CONFIG_DIR" "Mainsail config directory"
+  KLIPPERAI_MANAGED_CONFIG_DIR_NAME="klipperai"
+  KLIPPERAI_MANAGED_CONFIG_DIR_PATH="$KLIPPERAI_MAINSAIL_CONFIG_DIR/$KLIPPERAI_MANAGED_CONFIG_DIR_NAME"
+  KLIPPERAI_CFG_PATH="$KLIPPERAI_MANAGED_CONFIG_DIR_PATH/klipperai.cfg"
+  KLIPPERAI_LEGACY_CFG_PATH="$KLIPPERAI_MAINSAIL_CONFIG_DIR/klipperai.cfg"
+  KLIPPERAI_MOONRAKER_CONFIG_PATH="$(detect_moonraker_config_path "$INSTALL_HOME" "$KLIPPERAI_MAINSAIL_CONFIG_DIR")"
+  [[ -f "$KLIPPERAI_MOONRAKER_CONFIG_PATH" ]] || die "Moonraker config file not found: $KLIPPERAI_MOONRAKER_CONFIG_PATH"
+  KLIPPERAI_MOONRAKER_CONFIG_DIR="${KLIPPERAI_MOONRAKER_CONFIG_PATH%/*}"
+  KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH="$KLIPPERAI_MANAGED_CONFIG_DIR_PATH/klipperai-moonraker.cfg"
+  KLIPPERAI_LEGACY_MOONRAKER_EXTENSION_CFG_PATH="$KLIPPERAI_MOONRAKER_CONFIG_DIR/klipperai-moonraker.cfg"
+  KLIPPERAI_MOONRAKER_ALLOWED_SERVICES_PATH="$KLIPPERAI_PRINTER_DATA_ROOT/moonraker.asvc"
+  KLIPPERAI_GIT_ORIGIN="$(detect_git_origin)"
+  KLIPPERAI_GIT_PRIMARY_BRANCH="$(detect_git_primary_branch)"
 
-  KLIPPYAI_MOONRAKER_URL="$(prompt_default "Moonraker URL" "http://127.0.0.1:7125")"
-  KLIPPYAI_ROOT_PATH="$(normalize_root_path "$(prompt_default "Reverse-proxy root path" "/klippyai")")"
-  KLIPPYAI_PORT="$(prompt_default "Local KlippyAI bind port" "8811")"
-  ensure_numeric_port "$KLIPPYAI_PORT"
-  KLIPPYAI_DATA_DIR="$(prompt_default "Local KlippyAI data directory" "/var/lib/klippyai")"
-  ensure_no_spaces "$KLIPPYAI_DATA_DIR" "Local data directory"
-  KLIPPYAI_CHECKPOINT_DB="${KLIPPYAI_DATA_DIR}/checkpoints.sqlite"
-  KLIPPYAI_COLLECT_HOST_LOGS="true"
-  KLIPPYAI_LOGS_DIR_PATH="${KLIPPYAI_PRINTER_DATA_ROOT}/logs"
-  KLIPPYAI_AGENT_LOG_FILE_NAME="klippyai.log"
-  KLIPPYAI_AGENT_LOG_LEVEL="INFO"
-  KLIPPYAI_LOG_TAIL_LINES_DEFAULT="100"
-  KLIPPYAI_COLLECT_SYSTEMD_DIAGNOSTICS="true"
-  KLIPPYAI_MOONRAKER_SERVICE_NAME="moonraker.service"
-  KLIPPYAI_KLIPPER_SERVICE_NAME="klipper.service"
-  KLIPPYAI_JOURNAL_LINES="200"
-  KLIPPYAI_SYSTEM_STATUS_ARTIFACT_CHAR_LIMIT="6000"
-  KLIPPYAI_JOURNAL_ARTIFACT_CHAR_LIMIT="16000"
-  KLIPPYAI_SYSTEM_COMMAND_TIMEOUT_SECONDS="6"
-  KLIPPYAI_KLIPPER_CHECKOUT="$(detect_klipper_checkout "$KLIPPYAI_MOONRAKER_CONFIG_PATH" "$INSTALL_HOME" || true)"
-  KLIPPYAI_GCODE_SHELL_COMMAND_CHECKOUT="$(detect_gcode_shell_command_checkout "$KLIPPYAI_MOONRAKER_CONFIG_PATH" "$INSTALL_HOME" || true)"
-  KLIPPYAI_OE_ROOT="$(detect_octoeverywhere_root "$INSTALL_HOME" || true)"
-  KLIPPYAI_OE_SERVICE_NAME="$(detect_octoeverywhere_service_name || true)"
-  KLIPPYAI_UPDATE_RUNNER_PATH="/usr/local/bin/klippyai-self-update"
-  KLIPPYAI_UPDATE_SUDOERS_PATH="/etc/sudoers.d/klippyai-self-update"
-  KLIPPYAI_UPDATE_MACRO_CFG_PATH="$KLIPPYAI_MANAGED_CONFIG_DIR_PATH/klippyai-macros.cfg"
-  KLIPPYAI_LEGACY_UPDATE_MACRO_CFG_PATH="$KLIPPYAI_MAINSAIL_CONFIG_DIR/klippyai-update-macro.cfg"
-  KLIPPYAI_KLIPPER_SYSTEM_USER="$(detect_systemd_unit_user "$KLIPPYAI_KLIPPER_SERVICE_NAME" "$INSTALL_USER")"
-  KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH=""
+  KLIPPERAI_MOONRAKER_URL="$(prompt_default "Moonraker URL" "http://127.0.0.1:7125")"
+  KLIPPERAI_ROOT_PATH="$(normalize_root_path "$(prompt_default "Reverse-proxy root path" "/klipperai")")"
+  KLIPPERAI_PORT="$(prompt_default "Local KlipperAI bind port" "8811")"
+  ensure_numeric_port "$KLIPPERAI_PORT"
+  KLIPPERAI_DATA_DIR="$(prompt_default "Local KlipperAI data directory" "/var/lib/klipperai")"
+  ensure_no_spaces "$KLIPPERAI_DATA_DIR" "Local data directory"
+  KLIPPERAI_CHECKPOINT_DB="${KLIPPERAI_DATA_DIR}/checkpoints.sqlite"
+  KLIPPERAI_COLLECT_HOST_LOGS="true"
+  KLIPPERAI_LOGS_DIR_PATH="${KLIPPERAI_PRINTER_DATA_ROOT}/logs"
+  KLIPPERAI_AGENT_LOG_FILE_NAME="klipperai.log"
+  KLIPPERAI_AGENT_LOG_LEVEL="INFO"
+  KLIPPERAI_LOG_TAIL_LINES_DEFAULT="100"
+  KLIPPERAI_COLLECT_SYSTEMD_DIAGNOSTICS="true"
+  KLIPPERAI_MOONRAKER_SERVICE_NAME="moonraker.service"
+  KLIPPERAI_KLIPPER_SERVICE_NAME="klipper.service"
+  KLIPPERAI_JOURNAL_LINES="200"
+  KLIPPERAI_SYSTEM_STATUS_ARTIFACT_CHAR_LIMIT="6000"
+  KLIPPERAI_JOURNAL_ARTIFACT_CHAR_LIMIT="16000"
+  KLIPPERAI_SYSTEM_COMMAND_TIMEOUT_SECONDS="6"
+  KLIPPERAI_KLIPPER_CHECKOUT="$(detect_klipper_checkout "$KLIPPERAI_MOONRAKER_CONFIG_PATH" "$INSTALL_HOME" || true)"
+  KLIPPERAI_GCODE_SHELL_COMMAND_CHECKOUT="$(detect_gcode_shell_command_checkout "$KLIPPERAI_MOONRAKER_CONFIG_PATH" "$INSTALL_HOME" || true)"
+  KLIPPERAI_OE_ROOT="$(detect_octoeverywhere_root "$INSTALL_HOME" || true)"
+  KLIPPERAI_OE_SERVICE_NAME="$(detect_octoeverywhere_service_name || true)"
+  KLIPPERAI_UPDATE_RUNNER_PATH="/usr/local/bin/klipperai-self-update"
+  KLIPPERAI_UPDATE_SUDOERS_PATH="/etc/sudoers.d/klipperai-self-update"
+  KLIPPERAI_UPDATE_MACRO_CFG_PATH="$KLIPPERAI_MANAGED_CONFIG_DIR_PATH/klipperai-macros.cfg"
+  KLIPPERAI_LEGACY_UPDATE_MACRO_CFG_PATH="$KLIPPERAI_MAINSAIL_CONFIG_DIR/klipperai-update-macro.cfg"
+  KLIPPERAI_KLIPPER_SYSTEM_USER="$(detect_systemd_unit_user "$KLIPPERAI_KLIPPER_SERVICE_NAME" "$INSTALL_USER")"
+  KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH=""
   INSTALL_GCODE_SHELL_COMMAND="no"
   INSTALL_UPDATE_MACRO="no"
   INSTALL_OCTOEVERYWHERE_PATCH="no"
   INSTALL_OCTOEVERYWHERE_AUTO_REAPPLY="no"
 
-  KLIPPYAI_LLM_PROVIDER="$(prompt_default "LLM provider (currently: openai or stub)" "openai")"
-  KLIPPYAI_LLM_PROVIDER="${KLIPPYAI_LLM_PROVIDER,,}"
-  KLIPPYAI_OPENAI_MODEL="$(prompt_default "Model name" "gpt-5.4-mini")"
-  KLIPPYAI_OPENAI_API_KEY=""
+  KLIPPERAI_LLM_PROVIDER="$(prompt_default "LLM provider (currently: openai or stub)" "openai")"
+  KLIPPERAI_LLM_PROVIDER="${KLIPPERAI_LLM_PROVIDER,,}"
+  KLIPPERAI_OPENAI_MODEL="$(prompt_default "Model name" "gpt-5.4-mini")"
+  KLIPPERAI_OPENAI_API_KEY=""
 
-  case "$KLIPPYAI_LLM_PROVIDER" in
+  case "$KLIPPERAI_LLM_PROVIDER" in
     openai)
-      KLIPPYAI_OPENAI_API_KEY="$(prompt_secret "OpenAI API key")"
-      if [[ -z "$KLIPPYAI_OPENAI_API_KEY" ]]; then
+      KLIPPERAI_OPENAI_API_KEY="$(prompt_secret "OpenAI API key")"
+      if [[ -z "$KLIPPERAI_OPENAI_API_KEY" ]]; then
         die "An OpenAI API key is required when provider is 'openai'."
       fi
       ;;
@@ -1562,13 +1562,13 @@ main() {
       warn "Using the local stub provider. Diagnostics will be limited to deterministic rules and placeholder responses."
       ;;
     *)
-      die "Unsupported provider '$KLIPPYAI_LLM_PROVIDER'. Current installer support is: openai, stub."
+      die "Unsupported provider '$KLIPPERAI_LLM_PROVIDER'. Current installer support is: openai, stub."
       ;;
   esac
 
-  KLIPPYAI_ENABLE_WRITE_ACTIONS="false"
+  KLIPPERAI_ENABLE_WRITE_ACTIONS="false"
 
-  if confirm "Install a Mainsail custom-navigation link to KlippyAI?" "Y"; then
+  if confirm "Install a Mainsail custom-navigation link to KlipperAI?" "Y"; then
     INSTALL_MAINSAIL_NAV="yes"
   else
     INSTALL_MAINSAIL_NAV="no"
@@ -1576,29 +1576,29 @@ main() {
 
   if confirm "Patch the Mainsail nginx server block automatically?" "Y"; then
     PATCH_NGINX_INCLUDE="yes"
-    KLIPPYAI_NGINX_SERVER_BLOCK_PATH="$(prompt_default "nginx server block path" "$(detect_nginx_server_block_path)")"
-    ensure_no_spaces "$KLIPPYAI_NGINX_SERVER_BLOCK_PATH" "nginx server block path"
-    [[ -f "$KLIPPYAI_NGINX_SERVER_BLOCK_PATH" ]] || die "nginx server block file not found: $KLIPPYAI_NGINX_SERVER_BLOCK_PATH"
+    KLIPPERAI_NGINX_SERVER_BLOCK_PATH="$(prompt_default "nginx server block path" "$(detect_nginx_server_block_path)")"
+    ensure_no_spaces "$KLIPPERAI_NGINX_SERVER_BLOCK_PATH" "nginx server block path"
+    [[ -f "$KLIPPERAI_NGINX_SERVER_BLOCK_PATH" ]] || die "nginx server block file not found: $KLIPPERAI_NGINX_SERVER_BLOCK_PATH"
   else
     PATCH_NGINX_INCLUDE="no"
-    KLIPPYAI_NGINX_SERVER_BLOCK_PATH="$(detect_nginx_server_block_path)"
+    KLIPPERAI_NGINX_SERVER_BLOCK_PATH="$(detect_nginx_server_block_path)"
   fi
 
-  if [[ "$INSTALL_MAINSAIL_NAV" == "yes" ]] && [[ ! -d "$KLIPPYAI_MAINSAIL_CONFIG_DIR" ]]; then
-    die "Mainsail config directory does not exist: $KLIPPYAI_MAINSAIL_CONFIG_DIR"
+  if [[ "$INSTALL_MAINSAIL_NAV" == "yes" ]] && [[ ! -d "$KLIPPERAI_MAINSAIL_CONFIG_DIR" ]]; then
+    die "Mainsail config directory does not exist: $KLIPPERAI_MAINSAIL_CONFIG_DIR"
   fi
 
-  if [[ -n "$KLIPPYAI_GCODE_SHELL_COMMAND_CHECKOUT" ]]; then
-    log "Detected gcode_shell_command support in $KLIPPYAI_GCODE_SHELL_COMMAND_CHECKOUT."
-    if confirm "Install an UPDATE_KLIPPYAI macro that pulls the repo and restarts $SERVICE_NAME?" "N"; then
+  if [[ -n "$KLIPPERAI_GCODE_SHELL_COMMAND_CHECKOUT" ]]; then
+    log "Detected gcode_shell_command support in $KLIPPERAI_GCODE_SHELL_COMMAND_CHECKOUT."
+    if confirm "Install an UPDATE_KLIPPERAI macro that pulls the repo and restarts $SERVICE_NAME?" "N"; then
       INSTALL_UPDATE_MACRO="yes"
     fi
-  elif [[ -n "$KLIPPYAI_KLIPPER_CHECKOUT" ]]; then
-    warn "gcode_shell_command support was not found, but Klipper/Kalico checkout was detected at $KLIPPYAI_KLIPPER_CHECKOUT."
+  elif [[ -n "$KLIPPERAI_KLIPPER_CHECKOUT" ]]; then
+    warn "gcode_shell_command support was not found, but Klipper/Kalico checkout was detected at $KLIPPERAI_KLIPPER_CHECKOUT."
     warn "gcode_shell_command allows Klipper macros to run host shell commands. Only install it if you trust this printer host configuration."
-    if confirm "Install gcode_shell_command from KIAUH, then install the UPDATE_KLIPPYAI macro?" "N"; then
+    if confirm "Install gcode_shell_command from KIAUH, then install the UPDATE_KLIPPERAI macro?" "N"; then
       INSTALL_GCODE_SHELL_COMMAND="yes"
-      KLIPPYAI_GCODE_SHELL_COMMAND_CHECKOUT="$KLIPPYAI_KLIPPER_CHECKOUT"
+      KLIPPERAI_GCODE_SHELL_COMMAND_CHECKOUT="$KLIPPERAI_KLIPPER_CHECKOUT"
       INSTALL_UPDATE_MACRO="yes"
     else
       INSTALL_UPDATE_MACRO="unavailable"
@@ -1608,9 +1608,9 @@ main() {
     INSTALL_UPDATE_MACRO="unavailable"
   fi
 
-  if [[ -n "$KLIPPYAI_OE_ROOT" ]]; then
-    log "Detected OctoEverywhere checkout at $KLIPPYAI_OE_ROOT."
-    if confirm "Apply the optional OctoEverywhere /klippyai integration now?" "N"; then
+  if [[ -n "$KLIPPERAI_OE_ROOT" ]]; then
+    log "Detected OctoEverywhere checkout at $KLIPPERAI_OE_ROOT."
+    if confirm "Apply the optional OctoEverywhere /klipperai integration now?" "N"; then
       INSTALL_OCTOEVERYWHERE_PATCH="yes"
       if confirm "Install an auto-reapply timer for the OctoEverywhere patch after future OE updates?" "Y"; then
         INSTALL_OCTOEVERYWHERE_AUTO_REAPPLY="yes"
@@ -1630,8 +1630,8 @@ main() {
   log "Using Python interpreter: $PYTHON_BIN ($(python_version_string "$PYTHON_BIN"))"
 
   log "Creating service data directory."
-  run_root install -d -m 755 "$KLIPPYAI_DATA_DIR"
-  run_root chown "$INSTALL_USER:$INSTALL_GROUP" "$KLIPPYAI_DATA_DIR"
+  run_root install -d -m 755 "$KLIPPERAI_DATA_DIR"
+  run_root chown "$INSTALL_USER:$INSTALL_GROUP" "$KLIPPERAI_DATA_DIR"
 
   log "Creating Python virtual environment."
   if [[ -d "$INSTALL_DIR/.venv" ]]; then
@@ -1640,7 +1640,7 @@ main() {
       confirm "Recreate the virtual environment?" "Y" || die "Installation cancelled."
       run_as_user rm -rf "$INSTALL_DIR/.venv"
     elif ! python_is_supported "$INSTALL_DIR/.venv/bin/python"; then
-      warn "Existing virtual environment uses Python $(python_version_string "$INSTALL_DIR/.venv/bin/python"), but KlippyAI requires Python ${MIN_PYTHON_VERSION}+."
+      warn "Existing virtual environment uses Python $(python_version_string "$INSTALL_DIR/.venv/bin/python"), but KlipperAI requires Python ${MIN_PYTHON_VERSION}+."
       confirm "Recreate the virtual environment with $PYTHON_BIN?" "Y" || die "Installation cancelled."
       run_as_user rm -rf "$INSTALL_DIR/.venv"
     fi
@@ -1653,32 +1653,32 @@ main() {
   run_as_user "$INSTALL_DIR/.venv/bin/python" -m pip install --upgrade pip
   run_as_user env SKIP_CYTHON=1 MARKUPSAFE_SKIP_SPEEDUPS=1 "$INSTALL_DIR/.venv/bin/python" -m pip install --prefer-binary -e "$INSTALL_DIR"
 
-  log "Writing /etc/klippyai/klippyai.env"
+  log "Writing /etc/klipperai/klipperai.env"
   write_env_file
 
-  log "Writing ${KLIPPYAI_CFG_PATH}"
+  log "Writing ${KLIPPERAI_CFG_PATH}"
   write_cfg_file
-  if [[ "$KLIPPYAI_LEGACY_CFG_PATH" != "$KLIPPYAI_CFG_PATH" ]]; then
-    retire_legacy_file_if_present "$KLIPPYAI_LEGACY_CFG_PATH"
+  if [[ "$KLIPPERAI_LEGACY_CFG_PATH" != "$KLIPPERAI_CFG_PATH" ]]; then
+    retire_legacy_file_if_present "$KLIPPERAI_LEGACY_CFG_PATH"
   fi
 
-  log "Detecting printer profile into ${KLIPPYAI_CFG_PATH}"
-  if ! run_as_user "$INSTALL_DIR/.venv/bin/klippyai-detect-profile" \
-    --config-file "$KLIPPYAI_CFG_PATH" \
-    --moonraker-url "$KLIPPYAI_MOONRAKER_URL" \
-    --printer-data-root "$KLIPPYAI_PRINTER_DATA_ROOT" \
+  log "Detecting printer profile into ${KLIPPERAI_CFG_PATH}"
+  if ! run_as_user "$INSTALL_DIR/.venv/bin/klipperai-detect-profile" \
+    --config-file "$KLIPPERAI_CFG_PATH" \
+    --moonraker-url "$KLIPPERAI_MOONRAKER_URL" \
+    --printer-data-root "$KLIPPERAI_PRINTER_DATA_ROOT" \
     --overwrite
   then
-    warn "Automatic printer profile detection failed. You can edit the printer profile sections in ${KLIPPYAI_CFG_PATH} later."
+    warn "Automatic printer profile detection failed. You can edit the printer profile sections in ${KLIPPERAI_CFG_PATH} later."
   fi
 
-  log "Writing ${KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH}"
+  log "Writing ${KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH}"
   write_moonraker_extension_cfg
-  if [[ "$KLIPPYAI_LEGACY_MOONRAKER_EXTENSION_CFG_PATH" != "$KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH" ]]; then
-    retire_legacy_file_if_present "$KLIPPYAI_LEGACY_MOONRAKER_EXTENSION_CFG_PATH"
+  if [[ "$KLIPPERAI_LEGACY_MOONRAKER_EXTENSION_CFG_PATH" != "$KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH" ]]; then
+    retire_legacy_file_if_present "$KLIPPERAI_LEGACY_MOONRAKER_EXTENSION_CFG_PATH"
   fi
 
-  log "Adding KlippyAI include to ${KLIPPYAI_MOONRAKER_CONFIG_PATH}"
+  log "Adding KlipperAI include to ${KLIPPERAI_MOONRAKER_CONFIG_PATH}"
   ensure_moonraker_include
 
   log "Allowing Moonraker to manage ${SERVICE_NAME}"
@@ -1695,11 +1695,11 @@ main() {
     ensure_nginx_include
     log "Testing and reloading nginx."
     if ! reload_nginx; then
-      if [[ -f "${KLIPPYAI_NGINX_SERVER_BLOCK_PATH}.bak.${TIMESTAMP}" ]]; then
-        warn "nginx validation failed after patching $KLIPPYAI_NGINX_SERVER_BLOCK_PATH. Restoring the previous file."
-        run_root cp "${KLIPPYAI_NGINX_SERVER_BLOCK_PATH}.bak.${TIMESTAMP}" "$KLIPPYAI_NGINX_SERVER_BLOCK_PATH"
+      if [[ -f "${KLIPPERAI_NGINX_SERVER_BLOCK_PATH}.bak.${TIMESTAMP}" ]]; then
+        warn "nginx validation failed after patching $KLIPPERAI_NGINX_SERVER_BLOCK_PATH. Restoring the previous file."
+        run_root cp "${KLIPPERAI_NGINX_SERVER_BLOCK_PATH}.bak.${TIMESTAMP}" "$KLIPPERAI_NGINX_SERVER_BLOCK_PATH"
       fi
-      die "nginx validation failed after patching $KLIPPYAI_NGINX_SERVER_BLOCK_PATH."
+      die "nginx validation failed after patching $KLIPPERAI_NGINX_SERVER_BLOCK_PATH."
     fi
   fi
 
@@ -1713,7 +1713,7 @@ main() {
   run_root systemctl enable --now "$SERVICE_NAME"
 
   if [[ "$INSTALL_OCTOEVERYWHERE_PATCH" == "yes" ]]; then
-    log "Applying OctoEverywhere /klippyai integration patch."
+    log "Applying OctoEverywhere /klipperai integration patch."
     install_octoeverywhere_integration
   fi
 
@@ -1728,7 +1728,7 @@ main() {
   fi
 
   if [[ "$INSTALL_UPDATE_MACRO" == "yes" ]]; then
-    log "Installing UPDATE_KLIPPYAI macro integration."
+    log "Installing UPDATE_KLIPPERAI macro integration."
     install_update_macro_integration
   fi
 
@@ -1740,27 +1740,27 @@ Service name:
   $SERVICE_NAME
 
 Environment file:
-  /etc/klippyai/klippyai.env
+  /etc/klipperai/klipperai.env
 
 Editable config file:
-  $KLIPPYAI_CFG_PATH
+  $KLIPPERAI_CFG_PATH
 
 Generated nginx snippet:
-  /etc/klippyai/nginx-location.conf
+  /etc/klipperai/nginx-location.conf
 
-KlippyAI runtime log:
-  $KLIPPYAI_LOGS_DIR_PATH/$KLIPPYAI_AGENT_LOG_FILE_NAME
+KlipperAI runtime log:
+  $KLIPPERAI_LOGS_DIR_PATH/$KLIPPERAI_AGENT_LOG_FILE_NAME
 
 Next steps:
-1. Restart Moonraker so it reloads the KlippyAI include and allowed-services file:
+1. Restart Moonraker so it reloads the KlipperAI include and allowed-services file:
    sudo systemctl restart moonraker
 2. Check the services:
    systemctl status $SERVICE_NAME --no-pager
    systemctl status moonraker --no-pager
-   tail -n 100 $KLIPPYAI_LOGS_DIR_PATH/$KLIPPYAI_AGENT_LOG_FILE_NAME
-3. Open KlippyAI:
-   http://<printer-host>${KLIPPYAI_ROOT_PATH}/
-4. After editing ${KLIPPYAI_CFG_PATH}, restart the service:
+   tail -n 100 $KLIPPERAI_LOGS_DIR_PATH/$KLIPPERAI_AGENT_LOG_FILE_NAME
+3. Open KlipperAI:
+   http://<printer-host>${KLIPPERAI_ROOT_PATH}/
+4. After editing ${KLIPPERAI_CFG_PATH}, restart the service:
    sudo systemctl restart $SERVICE_NAME
 
 EOF
@@ -1770,14 +1770,14 @@ EOF
 
 Klipper update macro:
 - gcode_shell_command installed: $INSTALL_GCODE_SHELL_COMMAND
-- Generated macro config: $KLIPPYAI_UPDATE_MACRO_CFG_PATH
-- Included from: ${KLIPPYAI_KLIPPER_ROOT_CONFIG_PATH:-<unknown>}
-- Helper script: $KLIPPYAI_UPDATE_RUNNER_PATH
-- Sudoers entry: $KLIPPYAI_UPDATE_SUDOERS_PATH
-- Shell command: ${KLIPPYAI_UPDATE_MACRO_COMMAND:-sudo -n $KLIPPYAI_UPDATE_RUNNER_PATH}
-- Macro name: UPDATE_KLIPPYAI
+- Generated macro config: $KLIPPERAI_UPDATE_MACRO_CFG_PATH
+- Included from: ${KLIPPERAI_KLIPPER_ROOT_CONFIG_PATH:-<unknown>}
+- Helper script: $KLIPPERAI_UPDATE_RUNNER_PATH
+- Sudoers entry: $KLIPPERAI_UPDATE_SUDOERS_PATH
+- Shell command: ${KLIPPERAI_UPDATE_MACRO_COMMAND:-sudo -n $KLIPPERAI_UPDATE_RUNNER_PATH}
+- Macro name: UPDATE_KLIPPERAI
 - Restart Klipper after install so it loads the new macro:
-  sudo systemctl restart $KLIPPYAI_KLIPPER_SERVICE_NAME
+  sudo systemctl restart $KLIPPERAI_KLIPPER_SERVICE_NAME
 
 EOF
   fi
@@ -1786,10 +1786,10 @@ EOF
     cat <<EOF
 
 OctoEverywhere integration:
-- Checkout: $KLIPPYAI_OE_ROOT
-- Service: ${KLIPPYAI_OE_SERVICE_NAME:-<restart manually>}
+- Checkout: $KLIPPERAI_OE_ROOT
+- Service: ${KLIPPERAI_OE_SERVICE_NAME:-<restart manually>}
 - Navigation target: new tab
-- Route: ${KLIPPYAI_ROOT_PATH%/}/
+- Route: ${KLIPPERAI_ROOT_PATH%/}/
 - Auto-reapply timer: $INSTALL_OCTOEVERYWHERE_AUTO_REAPPLY
 
 EOF
@@ -1799,21 +1799,21 @@ EOF
     cat <<EOF
 
 nginx:
-- Patched: $KLIPPYAI_NGINX_SERVER_BLOCK_PATH
-- Included snippet: /etc/klippyai/nginx-location.conf
+- Patched: $KLIPPERAI_NGINX_SERVER_BLOCK_PATH
+- Included snippet: /etc/klipperai/nginx-location.conf
 - Reloaded: yes
 
 If you enabled the Mainsail custom navigation entry:
 - reload the Mainsail page after nginx reload
-- the nav link is stored in ${KLIPPYAI_MAINSAIL_CONFIG_DIR}/.theme/navi.json
-- the agent config is stored in ${KLIPPYAI_CFG_PATH}
-- the Moonraker integration include is stored in ${KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH}
+- the nav link is stored in ${KLIPPERAI_MAINSAIL_CONFIG_DIR}/.theme/navi.json
+- the agent config is stored in ${KLIPPERAI_CFG_PATH}
+- the Moonraker integration include is stored in ${KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH}
 - you can rerun the helper manually with:
-  bash $INSTALL_DIR/integrations/mainsail/install-custom-nav.sh --config-dir $KLIPPYAI_MAINSAIL_CONFIG_DIR --href ${KLIPPYAI_ROOT_PATH%/}/
+  bash $INSTALL_DIR/integrations/mainsail/install-custom-nav.sh --config-dir $KLIPPERAI_MAINSAIL_CONFIG_DIR --href ${KLIPPERAI_ROOT_PATH%/}/
 
 Current limitations:
 - the optional native Mainsail drawer patch is not installed by this script
-- the KlippyAI runtime is intentionally read-only and will not write printer/config files
+- the KlipperAI runtime is intentionally read-only and will not write printer/config files
 - Moonraker update-manager controls work best after the repo has semantic-version tags like v0.1.0
 
 EOF
@@ -1822,7 +1822,7 @@ EOF
 
 Manual nginx follow-up:
 - Add this line inside the Mainsail nginx server block:
-  include /etc/klippyai/nginx-location.conf;
+  include /etc/klipperai/nginx-location.conf;
 - Common file locations are often:
   - /etc/nginx/conf.d/mainsail.conf
   - /etc/nginx/sites-enabled/mainsail
@@ -1832,15 +1832,15 @@ Manual nginx follow-up:
 
 If you enabled the Mainsail custom navigation entry:
 - reload the Mainsail page after nginx reload
-- the nav link is stored in ${KLIPPYAI_MAINSAIL_CONFIG_DIR}/.theme/navi.json
-- the agent config is stored in ${KLIPPYAI_CFG_PATH}
-- the Moonraker integration include is stored in ${KLIPPYAI_MOONRAKER_EXTENSION_CFG_PATH}
+- the nav link is stored in ${KLIPPERAI_MAINSAIL_CONFIG_DIR}/.theme/navi.json
+- the agent config is stored in ${KLIPPERAI_CFG_PATH}
+- the Moonraker integration include is stored in ${KLIPPERAI_MOONRAKER_EXTENSION_CFG_PATH}
 - you can rerun the helper manually with:
-  bash $INSTALL_DIR/integrations/mainsail/install-custom-nav.sh --config-dir $KLIPPYAI_MAINSAIL_CONFIG_DIR --href ${KLIPPYAI_ROOT_PATH%/}/
+  bash $INSTALL_DIR/integrations/mainsail/install-custom-nav.sh --config-dir $KLIPPERAI_MAINSAIL_CONFIG_DIR --href ${KLIPPERAI_ROOT_PATH%/}/
 
 Current limitations:
 - the optional native Mainsail drawer patch is not installed by this script
-- the KlippyAI runtime is intentionally read-only and will not write printer/config files
+- the KlipperAI runtime is intentionally read-only and will not write printer/config files
 - Moonraker update-manager controls work best after the repo has semantic-version tags like v0.1.0
 
 EOF

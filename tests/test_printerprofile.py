@@ -4,13 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from klippyai_agent.printerconfig import ConfigCollector
-from klippyai_agent.printerprofile import (
+from klipperai_agent.printerconfig import ConfigCollector
+from klipperai_agent.printerprofile import (
     PrinterProfileCollector,
     build_profile_from_settings,
     write_profile_to_cfg,
 )
-from klippyai_agent.settings import Settings
+from klipperai_agent.settings import Settings
 
 
 class _FakeMoonraker:
@@ -101,7 +101,7 @@ async def test_profile_collector_detects_firmware_addons_and_board_hints(tmp_pat
 
     (config_dir / "printer.cfg").write_text(
         "[include extras/stealthburner_ebb36.cfg]\n"
-        "[include klippyai/*.cfg]\n\n"
+        "[include klipperai/*.cfg]\n\n"
         "[printer]\n"
         "kinematics: corexy\n\n"
         "[stepper_x]\n"
@@ -183,8 +183,8 @@ async def test_profile_collector_applies_mainboard_and_toolhead_overrides(tmp_pa
 
     assert profile.mainboard == "LDO Leviathan"
     assert profile.toolhead == "Dragon Burner"
-    assert any(item.source == "klippyai.cfg" and "Mainboard declared" in item.summary for item in profile.evidence)
-    assert any(item.source == "klippyai.cfg" and "Toolhead declared" in item.summary for item in profile.evidence)
+    assert any(item.source == "klipperai.cfg" and "Mainboard declared" in item.summary for item in profile.evidence)
+    assert any(item.source == "klipperai.cfg" and "Toolhead declared" in item.summary for item in profile.evidence)
 
 
 def test_build_profile_from_settings_uses_persisted_identity() -> None:
@@ -221,7 +221,7 @@ def test_build_profile_from_settings_uses_persisted_identity() -> None:
 
 @pytest.mark.asyncio
 async def test_write_profile_to_cfg_persists_detected_identity(tmp_path: Path) -> None:
-    config_file = tmp_path / "klippyai.cfg"
+    config_file = tmp_path / "klipperai.cfg"
     config_file.write_text(
         "# Firmware comment should be preserved\n"
         "[printer_identity]\n"

@@ -18,8 +18,8 @@ const shellScrim = document.getElementById("shell-scrim");
 const introMessage =
   document.querySelector("#messages .message.assistant .message-body")?.textContent?.trim() ||
   "Ask what failed or ask for config help.";
-const STORAGE_KEY = "klippyai.embed.state.v2";
-const LEGACY_STORAGE_KEY = "klippyai.embed.state.v1";
+const STORAGE_KEY = "klipperai.embed.state.v2";
+const LEGACY_STORAGE_KEY = "klipperai.embed.state.v1";
 
 const timestampFormatter = new Intl.DateTimeFormat(undefined, {
   month: "short",
@@ -908,7 +908,7 @@ function buildMessageElement(entry, options = {}) {
   }
 
   article.classList.add(entry.role);
-  setText(meta, entry.role === "user" ? "You" : "KlippyAI");
+  setText(meta, entry.role === "user" ? "You" : "KlipperAI");
   content.classList.toggle("markdown", entry.role === "assistant");
   if (entry.role === "assistant") {
     renderMarkdown(content, entry.text);

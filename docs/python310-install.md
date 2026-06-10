@@ -1,12 +1,12 @@
-# Installing Python 3.10 For KlippyAI
+# Installing Python 3.10 For KlipperAI
 
-KlippyAI requires Python `3.10+`.
+KlipperAI requires Python `3.10+`.
 
 This repository includes a helper script for Linux printer hosts that need Python `3.10` installed before `./install.sh` can create the project virtual environment.
 
 ## Quick Path
 
-From the KlippyAI checkout:
+From the KlipperAI checkout:
 
 ```bash
 chmod +x ./deployment/python/install-python310.sh
@@ -85,4 +85,4 @@ python3.10 -m venv --help
 
 - A source build can take a while on SBC hardware.
 - `ENABLE_OPTIMIZATIONS=1` is optional. It produces a more optimized interpreter, but the build takes longer and uses more CPU and memory.
-- The KlippyAI installer will recreate an existing `.venv` if it was previously built with Python `3.9` or older.
+- The KlipperAI installer will recreate an existing `.venv` if it was previously built with Python `3.9` or older.
