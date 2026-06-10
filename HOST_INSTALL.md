@@ -263,17 +263,16 @@ Optional OctoEverywhere path:
   often `/usr/data/octoeverywhere`; pass that as `--oe-root` if applying the
   patch manually
 - if you choose the OctoEverywhere patch in the installer, it can also install
-  a small systemd timer that reapplies the patch after future OE updates replace
-  the patched files
-- because the patch edits two tracked files in the OctoEverywhere checkout,
-  Moonraker can show the OE repo as dirty before an OE update. Restore the patch
-  first, update OctoEverywhere, then reapply the patch.
+  a systemd path/timer hook that removes KlipperAI's marked blocks when
+  Moonraker reports a pending OE update and reapplies them afterward
+- while the route is active, Moonraker still reports the two OE files as dirty;
+  refresh updates and let the hook prepare the checkout before clicking `Update`
 
-Manual auto-reapply timer install:
+Manual CB1 auto-update hook install:
 
 ```bash
 sh integrations/octoeverywhere/install-auto-reapply.sh \
-  --oe-root /usr/data/octoeverywhere \
+  --oe-root /home/biqu/octoeverywhere \
   --klipperai-prefix /klipperai \
   --klipperai-port 8811 \
   --nav-target _blank \
@@ -284,7 +283,7 @@ Prepare for an OctoEverywhere update:
 
 ```bash
 sh integrations/octoeverywhere/apply-local-klipperai-route-patch.sh \
-  --oe-root /usr/data/octoeverywhere \
+  --oe-root /home/biqu/octoeverywhere \
   --restore-original \
   --restart-service \
   --service octoeverywhere
@@ -294,7 +293,7 @@ After the OctoEverywhere update finishes, reapply KlipperAI:
 
 ```bash
 sh integrations/octoeverywhere/apply-local-klipperai-route-patch.sh \
-  --oe-root /usr/data/octoeverywhere \
+  --oe-root /home/biqu/octoeverywhere \
   --klipperai-prefix /klipperai \
   --klipperai-port 8811 \
   --nav-target _blank \
@@ -397,6 +396,10 @@ find /usr/data /root /opt /usr/local /usr/share -maxdepth 6 \
   -type f -path '*/klippy/extras/gcode_shell_command.py' 2>/dev/null
 ```
 
+On a normal CB1 image, the checkout is usually `/home/biqu/kalico` or
+`/home/biqu/klipper`, and the config directory is
+`/home/biqu/printer_data/config`.
+
 If the macro is installed, it writes:
 
 - `/usr/local/bin/klipperai-self-update`
@@ -419,6 +422,23 @@ sh integrations/klipper/install-update-macro.sh \
   --install-gcode-shell-command \
   --restart-klipper
 ```
+
+Manual install on a CB1:
+
+```bash
+cd /home/biqu/KlipperAI
+sh integrations/klipper/install-update-macro.sh \
+  --install-dir /home/biqu/KlipperAI \
+  --install-user biqu \
+  --config-dir /home/biqu/printer_data/config \
+  --root-config /home/biqu/printer_data/config/printer.cfg \
+  --klipper-checkout /home/biqu/kalico \
+  --restart-klipper
+```
+
+The generated updater stashes a dirty KlipperAI checkout before a fast-forward
+pull, restores the local changes afterward, refreshes the editable Python
+install, and restarts the configured agent service.
 
 ## 12. Runtime Behavior
 

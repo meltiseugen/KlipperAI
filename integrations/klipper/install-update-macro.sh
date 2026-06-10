@@ -294,8 +294,32 @@ run_as_install_user() {
   exit 1
 }
 
-run_as_install_user git -C "\$INSTALL_DIR" pull --ff-only
+STASH_BEFORE="\$(run_as_install_user git -C "\$INSTALL_DIR" rev-parse -q --verify refs/stash 2>/dev/null || true)"
+STASH_AFTER="\$STASH_BEFORE"
+if [ -n "\$(run_as_install_user git -C "\$INSTALL_DIR" status --porcelain --untracked-files=normal)" ]; then
+  printf 'KlipperAI checkout has local changes; stashing them before update.\\n'
+  run_as_install_user git -C "\$INSTALL_DIR" stash push --include-untracked -m "KlipperAI automatic update"
+  STASH_AFTER="\$(run_as_install_user git -C "\$INSTALL_DIR" rev-parse -q --verify refs/stash 2>/dev/null || true)"
+fi
+
+if ! run_as_install_user git -C "\$INSTALL_DIR" pull --ff-only; then
+  if [ -n "\$STASH_AFTER" ] && [ "\$STASH_AFTER" != "\$STASH_BEFORE" ]; then
+    run_as_install_user git -C "\$INSTALL_DIR" stash apply --index "\$STASH_AFTER" || true
+  fi
+  exit 1
+fi
+
 run_as_install_user env SKIP_CYTHON=1 MARKUPSAFE_SKIP_SPEEDUPS=1 "\$INSTALL_DIR/.venv/bin/python" -m pip install --prefer-binary -e "\$INSTALL_DIR"
+
+if [ -n "\$STASH_AFTER" ] && [ "\$STASH_AFTER" != "\$STASH_BEFORE" ]; then
+  if run_as_install_user git -C "\$INSTALL_DIR" stash apply --index "\$STASH_AFTER"; then
+    run_as_install_user git -C "\$INSTALL_DIR" stash drop "stash@{0}"
+    printf 'Restored stashed KlipperAI checkout changes.\\n'
+  else
+    printf 'KlipperAI updated, but local checkout changes conflicted. The backup remains in git stash: %s\\n' "\$STASH_AFTER" >&2
+  fi
+fi
+
 systemctl restart "\$SERVICE_NAME"
 printf 'KlipperAI updated and %s restarted.\\n' "\$SERVICE_NAME"
 EOF

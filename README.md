@@ -280,12 +280,10 @@ tab. If the installer detects an OctoEverywhere checkout, it can offer to apply
 this patch automatically. On rooted Creality Nebula Pad-style layouts, the
 OctoEverywhere checkout is commonly `/usr/data/octoeverywhere`.
 
-Use it only if you are comfortable carrying a local OctoEverywhere patch across
-future OE updates. Moonraker can report the OctoEverywhere repo as dirty while
-the patch is applied; restore the patch before updating OctoEverywhere, then
-reapply it afterward. The integration folder also includes an optional systemd
-timer installer that can reapply the patch automatically after OE updates replace
-the patched files.
+Use it only if you are comfortable carrying a local OctoEverywhere patch. The
+optional systemd path/timer hook coordinates Moonraker-managed OE updates: it
+removes only KlipperAI's marked blocks when an update is pending, then reapplies
+them after the update. Unrelated edits in those OE files are preserved.
 
 ### Manual Development Install
 

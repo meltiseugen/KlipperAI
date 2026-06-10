@@ -11,8 +11,10 @@ NGINX_SNIPPET_PATH="/etc/klipperai/nginx-location.conf"
 OE_REAPPLY_RUNNER_PATH="/usr/local/bin/klipperai-octoeverywhere-reapply"
 OE_REAPPLY_SERVICE_NAME="klipperai-octoeverywhere-reapply.service"
 OE_REAPPLY_TIMER_NAME="klipperai-octoeverywhere-reapply.timer"
+OE_REAPPLY_PATH_NAME="klipperai-octoeverywhere-reapply.path"
 OE_REAPPLY_SERVICE_PATH="/etc/systemd/system/${OE_REAPPLY_SERVICE_NAME}"
 OE_REAPPLY_TIMER_PATH="/etc/systemd/system/${OE_REAPPLY_TIMER_NAME}"
+OE_REAPPLY_PATH_PATH="/etc/systemd/system/${OE_REAPPLY_PATH_NAME}"
 
 log() {
   printf '[%s] %s\n' "$PROJECT_NAME" "$*"
@@ -490,7 +492,7 @@ main() {
     REMOVE_UPDATE_MACRO_INTEGRATION="no"
   fi
 
-  if [[ -f "$OE_REAPPLY_RUNNER_PATH" || -f "$OE_REAPPLY_SERVICE_PATH" || -f "$OE_REAPPLY_TIMER_PATH" ]]; then
+  if [[ -f "$OE_REAPPLY_RUNNER_PATH" || -f "$OE_REAPPLY_SERVICE_PATH" || -f "$OE_REAPPLY_TIMER_PATH" || -f "$OE_REAPPLY_PATH_PATH" ]]; then
     if confirm "Remove the OctoEverywhere patch auto-reapply timer?" "Y"; then
       REMOVE_OE_REAPPLY_INTEGRATION="yes"
     else
@@ -514,8 +516,10 @@ main() {
   if [[ "$REMOVE_OE_REAPPLY_INTEGRATION" == "yes" ]]; then
     log "Stopping and disabling ${OE_REAPPLY_TIMER_NAME}."
     run_root systemctl disable --now "$OE_REAPPLY_TIMER_NAME" || warn "Could not fully disable ${OE_REAPPLY_TIMER_NAME}."
+    run_root systemctl disable --now "$OE_REAPPLY_PATH_NAME" || warn "Could not fully disable ${OE_REAPPLY_PATH_NAME}."
     run_root systemctl disable --now "$OE_REAPPLY_SERVICE_NAME" || true
     remove_file_if_present "$OE_REAPPLY_TIMER_PATH"
+    remove_file_if_present "$OE_REAPPLY_PATH_PATH"
     remove_file_if_present "$OE_REAPPLY_SERVICE_PATH"
     remove_file_if_present "$OE_REAPPLY_RUNNER_PATH"
     run_root systemctl daemon-reload

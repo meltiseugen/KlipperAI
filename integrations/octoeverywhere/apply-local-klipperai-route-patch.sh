@@ -17,13 +17,13 @@ Options:
   --nav-target VALUE      Sidebar click behavior: _blank or _self. Default: _blank
   --restart-service       Restart the OctoEverywhere systemd service after patching
   --service NAME          Service name to restart with --restart-service. Default: octoeverywhere
-  --restore-original      Restore patched OctoEverywhere files from git before an OctoEverywhere update
+  --restore-original      Remove KlipperAI patch blocks before an OctoEverywhere update
   -h, --help              Show this help
 EOF
 }
 
 run_root() {
-  if [ "$(id -u)" -eq 0 ]; then
+  if [ "$(id -u)" -eq 0 ] || [ "${KLIPPERAI_NO_SUDO:-0}" = "1" ]; then
     "$@"
     return
   fi
@@ -44,8 +44,9 @@ NAV_TARGET="_blank"
 RESTART_SERVICE=0
 OE_SERVICE="octoeverywhere"
 RESTORE_ORIGINAL=0
-SUSPEND_FILE="/etc/klipperai/octoeverywhere-reapply.suspended"
-BACKUP_DIR="/etc/klipperai/octoeverywhere-backups"
+STATE_DIR="${KLIPPERAI_STATE_DIR:-/etc/klipperai}"
+SUSPEND_FILE="$STATE_DIR/octoeverywhere-reapply.suspended"
+BACKUP_DIR="$STATE_DIR/octoeverywhere-backups"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -151,21 +152,74 @@ backup_file_to_dir() {
 }
 
 if [ "$RESTORE_ORIGINAL" -eq 1 ]; then
-  command -v git >/dev/null 2>&1 || {
-    printf 'git is required to restore the OctoEverywhere checkout before update.\n' >&2
-    exit 1
-  }
-  if [ ! -d "$OE_ROOT/.git" ]; then
-    printf 'OctoEverywhere checkout is not a git repository: %s\n' "$OE_ROOT" >&2
-    exit 1
-  fi
-
   STAMP="$(date +%Y%m%d-%H%M%S)"
   ROUTER_BACKUP="$(backup_file_to_dir "$ROUTER_FILE" "moonrakerapirouter.py.restore-backup")"
   UI_BACKUP="$(backup_file_to_dir "$UI_FILE" "oe-ui.js.restore-backup")"
-  run_root git -C "$OE_ROOT" checkout -- \
-    moonraker_octoeverywhere/moonrakerapirouter.py \
-    moonraker_octoeverywhere/static/oe-ui.js
+
+  OE_ROUTER_FILE="$ROUTER_FILE" \
+  OE_UI_FILE="$UI_FILE" \
+  OE_ROUTER_OUTPUT_FILE="$ROUTER_TMP" \
+  OE_UI_OUTPUT_FILE="$UI_TMP" \
+  python3 - <<'PY'
+import os
+import re
+from pathlib import Path
+
+
+def remove_block(text: str, start_marker: str, end_marker: str, trailing_blank: bool = False) -> str:
+    suffix = r"\n\n" if trailing_blank else r"(?:\n|$)"
+    pattern = re.compile(
+        r"^[ \t]*" + re.escape(start_marker) + r"[^\n]*\n.*?"
+        r"^[ \t]*" + re.escape(end_marker) + r"[^\n]*" + suffix,
+        re.MULTILINE | re.DOTALL,
+    )
+    return pattern.sub("", text)
+
+
+router_file = Path(os.environ["OE_ROUTER_FILE"])
+ui_file = Path(os.environ["OE_UI_FILE"])
+router_text = router_file.read_text(encoding="utf-8")
+ui_text = ui_file.read_text(encoding="utf-8")
+
+for brand in ("KlipperAI", "KlippyAI"):
+    router_text = remove_block(
+        router_text,
+        f"# {brand} local route patch init start",
+        f"# {brand} local route patch init end",
+        trailing_blank=True,
+    )
+    router_text = remove_block(
+        router_text,
+        f"# {brand} local route patch helper start",
+        f"# {brand} local route patch helper end",
+        trailing_blank=True,
+    )
+    router_text = remove_block(
+        router_text,
+        f"# {brand} local route patch map start",
+        f"# {brand} local route patch map end",
+    )
+    ui_text = remove_block(
+        ui_text,
+        f"// {brand} local route patch start",
+        f"// {brand} local route patch end",
+    )
+
+Path(os.environ["OE_ROUTER_OUTPUT_FILE"]).write_text(router_text, encoding="utf-8")
+Path(os.environ["OE_UI_OUTPUT_FILE"]).write_text(ui_text, encoding="utf-8")
+PY
+
+  ROUTER_CHANGED=0
+  UI_CHANGED=0
+  cmp -s "$ROUTER_FILE" "$ROUTER_TMP" || ROUTER_CHANGED=1
+  cmp -s "$UI_FILE" "$UI_TMP" || UI_CHANGED=1
+
+  if [ "$ROUTER_CHANGED" -eq 1 ]; then
+    cat "$ROUTER_TMP" >"$ROUTER_FILE"
+  fi
+  if [ "$UI_CHANGED" -eq 1 ]; then
+    cat "$UI_TMP" >"$UI_FILE"
+  fi
 
   {
     printf 'KlipperAI OctoEverywhere auto-reapply is suspended for an OctoEverywhere update.\n'
@@ -175,9 +229,11 @@ if [ "$RESTORE_ORIGINAL" -eq 1 ]; then
   run_root install -d -m 755 "$(dirname "$SUSPEND_FILE")"
   run_root install -m 644 "$SUSPEND_TMP" "$SUSPEND_FILE"
 
-  printf 'Restored OctoEverywhere tracked files from git at %s\n' "$OE_ROOT"
+  printf 'Removed KlipperAI patch blocks from OctoEverywhere at %s\n' "$OE_ROOT"
   printf '  Router backup: %s\n' "$ROUTER_BACKUP"
   printf '  UI backup:     %s\n' "$UI_BACKUP"
+  printf '  Router edit:   %s\n' "$( [ "$ROUTER_CHANGED" -eq 1 ] && printf changed || printf unchanged )"
+  printf '  UI edit:       %s\n' "$( [ "$UI_CHANGED" -eq 1 ] && printf changed || printf unchanged )"
   printf '  Auto-reapply suspended by: %s\n' "$SUSPEND_FILE"
   if [ "$RESTART_SERVICE" -eq 1 ]; then
     run_root systemctl restart "$OE_SERVICE"
@@ -215,6 +271,21 @@ def replace_or_insert(text: str, start_marker: str, end_marker: str, block: str,
     return text.replace(anchor, block + anchor, 1)
 
 
+def remove_marked_block(
+    text: str,
+    start_marker: str,
+    end_marker: str,
+    trailing_blank: bool = False,
+) -> str:
+    suffix = r"\n\n" if trailing_blank else r"(?:\n|$)"
+    pattern = re.compile(
+        r"^[ \t]*" + re.escape(start_marker) + r"[^\n]*\n.*?"
+        r"^[ \t]*" + re.escape(end_marker) + r"[^\n]*" + suffix,
+        re.MULTILINE | re.DOTALL,
+    )
+    return pattern.sub("", text)
+
+
 router_file = Path(os.environ["OE_ROUTER_FILE"])
 ui_file = Path(os.environ["OE_UI_FILE"])
 router_output_file = Path(os.environ["OE_ROUTER_OUTPUT_FILE"])
@@ -225,6 +296,23 @@ nav_target = os.environ["NAV_TARGET"]
 klipperai_prefix_with_slash = klipperai_prefix if klipperai_prefix.endswith("/") else klipperai_prefix + "/"
 
 router_text = router_file.read_text(encoding="utf-8")
+router_text = remove_marked_block(
+    router_text,
+    "# KlippyAI local route patch init start",
+    "# KlippyAI local route patch init end",
+    trailing_blank=True,
+)
+router_text = remove_marked_block(
+    router_text,
+    "# KlippyAI local route patch helper start",
+    "# KlippyAI local route patch helper end",
+    trailing_blank=True,
+)
+router_text = remove_marked_block(
+    router_text,
+    "# KlippyAI local route patch map start",
+    "# KlippyAI local route patch map end",
+)
 
 router_init_block = f"""        # KlipperAI local route patch init start
         self.KlipperAiRootPath = "{klipperai_prefix}"
@@ -278,6 +366,11 @@ router_text = replace_or_insert(
 router_output_file.write_text(router_text, encoding="utf-8")
 
 ui_text = ui_file.read_text(encoding="utf-8")
+ui_text = remove_marked_block(
+    ui_text,
+    "// KlippyAI local route patch start",
+    "// KlippyAI local route patch end",
+)
 if nav_target == "_blank":
     navigation_action = """            oe_log("Opening KlipperAI in a new tab.");
             var resolvedUrl = new URL(klipperAiHref, window.location.origin);

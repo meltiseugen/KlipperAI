@@ -6,10 +6,9 @@ usage() {
   cat <<'EOF'
 Usage: install-auto-reapply.sh [options]
 
-Install a small systemd timer that checks whether the local KlipperAI
-OctoEverywhere route patch is still present. If an OctoEverywhere update
-replaces the patched files, the timer reapplies the patch and restarts
-OctoEverywhere.
+Install a systemd path/timer hook that coordinates the local KlipperAI patch
+with Moonraker-managed OctoEverywhere updates. It removes only KlipperAI's
+marked blocks when an update is pending, then reapplies them after the update.
 
 Options:
   --install-dir PATH      KlipperAI checkout root. Default: auto-detected
@@ -18,13 +17,15 @@ Options:
   --klipperai-port PORT    Local KlipperAI backend port. Default: 8811
   --nav-target VALUE      Sidebar click behavior: _blank or _self. Default: _blank
   --service NAME          OctoEverywhere systemd service. Default: octoeverywhere
-  --interval VALUE        systemd timer interval. Default: 30min
+  --moonraker-url URL      Moonraker base URL. Default: http://127.0.0.1:7125
+  --update-manager NAME   Moonraker updater name. Default: octoeverywhere
+  --interval VALUE        systemd fallback timer interval. Default: 5min
   -h, --help              Show this help
 EOF
 }
 
 run_root() {
-  if [ "$(id -u)" -eq 0 ]; then
+  if [ "$(id -u)" -eq 0 ] || [ "${KLIPPERAI_NO_SUDO:-0}" = "1" ]; then
     "$@"
     return
   fi
@@ -58,11 +59,15 @@ KLIPPERAI_PREFIX="/klipperai"
 KLIPPERAI_PORT="8811"
 NAV_TARGET="_blank"
 OE_SERVICE="octoeverywhere"
-CHECK_INTERVAL="30min"
-RUNNER_PATH="/usr/local/bin/klipperai-octoeverywhere-reapply"
-SYSTEMD_DIR="/etc/systemd/system"
+MOONRAKER_URL="http://127.0.0.1:7125"
+OE_UPDATE_MANAGER="octoeverywhere"
+CHECK_INTERVAL="5min"
+RUNNER_PATH="${KLIPPERAI_OE_RUNNER_PATH:-/usr/local/bin/klipperai-octoeverywhere-reapply}"
+SYSTEMD_DIR="${KLIPPERAI_SYSTEMD_DIR:-/etc/systemd/system}"
+STATE_DIR="${KLIPPERAI_STATE_DIR:-/etc/klipperai}"
 REAPPLY_SERVICE_NAME="klipperai-octoeverywhere-reapply.service"
 REAPPLY_TIMER_NAME="klipperai-octoeverywhere-reapply.timer"
+REAPPLY_PATH_NAME="klipperai-octoeverywhere-reapply.path"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -88,6 +93,14 @@ while [ $# -gt 0 ]; do
       ;;
     --service)
       OE_SERVICE="$2"
+      shift 2
+      ;;
+    --moonraker-url)
+      MOONRAKER_URL="$2"
+      shift 2
+      ;;
+    --update-manager)
+      OE_UPDATE_MANAGER="$2"
       shift 2
       ;;
     --interval)
@@ -139,12 +152,29 @@ ensure_no_spaces "--install-dir" "$INSTALL_DIR"
 ensure_no_spaces "--oe-root" "$OE_ROOT"
 ensure_no_spaces "--klipperai-prefix" "$KLIPPERAI_PREFIX"
 ensure_no_spaces "--service" "$OE_SERVICE"
+ensure_no_spaces "--moonraker-url" "$MOONRAKER_URL"
+ensure_no_spaces "--update-manager" "$OE_UPDATE_MANAGER"
 ensure_no_spaces "--interval" "$CHECK_INTERVAL"
 
 [ -f "$INSTALL_DIR/integrations/octoeverywhere/apply-local-klipperai-route-patch.sh" ] || \
   die "Patch helper not found under $INSTALL_DIR"
 [ -d "$OE_ROOT" ] || die "OctoEverywhere checkout not found: $OE_ROOT"
 command -v systemctl >/dev/null 2>&1 || die "systemctl is required."
+
+LEGACY_BACKUP_DIR="$STATE_DIR/octoeverywhere-backups/legacy"
+LEGACY_BACKUP_COUNT=0
+for legacy_backup in \
+  "$OE_ROOT"/moonraker_octoeverywhere/moonrakerapirouter.py.klippyai-backup-* \
+  "$OE_ROOT"/moonraker_octoeverywhere/static/oe-ui.js.klippyai-backup-*
+do
+  [ -f "$legacy_backup" ] || continue
+  run_root install -d -m 755 "$LEGACY_BACKUP_DIR"
+  run_root mv "$legacy_backup" "$LEGACY_BACKUP_DIR/$(basename "$legacy_backup")"
+  LEGACY_BACKUP_COUNT=$((LEGACY_BACKUP_COUNT + 1))
+done
+if [ "$LEGACY_BACKUP_COUNT" -gt 0 ]; then
+  printf '[KlipperAI OE auto-reapply] Moved %s legacy backup file(s) out of the OctoEverywhere checkout.\n' "$LEGACY_BACKUP_COUNT"
+fi
 
 OE_SERVICE_UNIT="$OE_SERVICE"
 case "$OE_SERVICE_UNIT" in
@@ -158,8 +188,9 @@ esac
 RUNNER_TMP=$(mktemp)
 SERVICE_TMP=$(mktemp)
 TIMER_TMP=$(mktemp)
+PATH_TMP=$(mktemp)
 cleanup() {
-  rm -f "$RUNNER_TMP" "$SERVICE_TMP" "$TIMER_TMP"
+  rm -f "$RUNNER_TMP" "$SERVICE_TMP" "$TIMER_TMP" "$PATH_TMP"
 }
 trap cleanup EXIT
 
@@ -174,7 +205,9 @@ KLIPPERAI_PREFIX="$KLIPPERAI_PREFIX"
 KLIPPERAI_PORT="$KLIPPERAI_PORT"
 NAV_TARGET="$NAV_TARGET"
 OE_SERVICE="$OE_SERVICE"
-SUSPEND_FILE="/etc/klipperai/octoeverywhere-reapply.suspended"
+MOONRAKER_URL="$MOONRAKER_URL"
+OE_UPDATE_MANAGER="$OE_UPDATE_MANAGER"
+SUSPEND_FILE="$STATE_DIR/octoeverywhere-reapply.suspended"
 
 ROUTER_FILE="\$OE_ROOT/moonraker_octoeverywhere/moonrakerapirouter.py"
 UI_FILE="\$OE_ROOT/moonraker_octoeverywhere/static/oe-ui.js"
@@ -187,36 +220,106 @@ log() {
 patch_is_present() {
   [ -f "\$ROUTER_FILE" ] || return 1
   [ -f "\$UI_FILE" ] || return 1
-  grep -q "KlipperAI local route patch init start" "\$ROUTER_FILE" || return 1
-  grep -q "KlipperAI local route patch map start" "\$ROUTER_FILE" || return 1
-  grep -q "KlipperAI local route patch start" "\$UI_FILE" || return 1
-  grep -q "oe_open_klipperai_popup_directly" "\$UI_FILE" || return 1
+  grep -Eq "(KlipperAI|KlippyAI) local route patch init start" "\$ROUTER_FILE" || return 1
+  grep -Eq "(KlipperAI|KlippyAI) local route patch map start" "\$ROUTER_FILE" || return 1
+  grep -Eq "(KlipperAI|KlippyAI) local route patch start" "\$UI_FILE" || return 1
   return 0
 }
-
-if patch_is_present; then
-  log "OctoEverywhere patch is present; nothing to do."
-  exit 0
-fi
-
-if [ -f "\$SUSPEND_FILE" ]; then
-  log "Auto-reapply is suspended by \$SUSPEND_FILE; leaving OctoEverywhere repo clean for update."
-  exit 0
-fi
 
 [ -f "\$PATCH_SCRIPT" ] || {
   log "Patch helper is missing: \$PATCH_SCRIPT"
   exit 1
 }
 
-log "OctoEverywhere patch is missing or incomplete; reapplying."
-sh "\$PATCH_SCRIPT" \
-  --oe-root "\$OE_ROOT" \
-  --klipperai-prefix "\$KLIPPERAI_PREFIX" \
-  --klipperai-port "\$KLIPPERAI_PORT" \
-  --nav-target "\$NAV_TARGET" \
-  --restart-service \
-  --service "\$OE_SERVICE"
+commits_behind() {
+  python3 - "\$MOONRAKER_URL" "\$OE_UPDATE_MANAGER" <<'PY'
+import json
+import sys
+import urllib.parse
+import urllib.request
+
+base_url = sys.argv[1].rstrip("/")
+target = sys.argv[2].lower()
+query = urllib.parse.urlencode({"refresh": "false"})
+with urllib.request.urlopen(f"{base_url}/machine/update/status?{query}", timeout=15) as response:
+    payload = json.load(response)
+version_info = payload["result"]["version_info"]
+for name, details in version_info.items():
+    if name.lower() == target:
+        print(int(details.get("commits_behind_count", 0)))
+        break
+else:
+    raise SystemExit(f"Moonraker updater not found: {sys.argv[2]}")
+PY
+}
+
+refresh_moonraker_updates() {
+  python3 - "\$MOONRAKER_URL" <<'PY' || true
+import sys
+import urllib.parse
+import urllib.request
+
+base_url = sys.argv[1].rstrip("/")
+query = urllib.parse.urlencode({"refresh": "true"})
+with urllib.request.urlopen(f"{base_url}/machine/update/status?{query}", timeout=120) as response:
+    response.read()
+PY
+}
+
+apply_patch() {
+  sh "\$PATCH_SCRIPT" \
+    --oe-root "\$OE_ROOT" \
+    --klipperai-prefix "\$KLIPPERAI_PREFIX" \
+    --klipperai-port "\$KLIPPERAI_PORT" \
+    --nav-target "\$NAV_TARGET" \
+    --restart-service \
+    --service "\$OE_SERVICE"
+}
+
+remove_patch_for_update() {
+  sh "\$PATCH_SCRIPT" \
+    --oe-root "\$OE_ROOT" \
+    --restore-original \
+    --restart-service \
+    --service "\$OE_SERVICE"
+}
+
+BEHIND=""
+if ! BEHIND="\$(commits_behind)"; then
+  log "Could not query Moonraker update state; leaving the current patch state unchanged."
+  exit 1
+fi
+
+case "\$BEHIND" in
+  ''|*[!0-9]*)
+    log "Moonraker returned an invalid commits-behind count: \$BEHIND"
+    exit 1
+    ;;
+esac
+
+if [ "\$BEHIND" -gt 0 ]; then
+  if patch_is_present; then
+    log "OctoEverywhere has \$BEHIND pending commit(s); removing KlipperAI patch blocks before update."
+    remove_patch_for_update
+    refresh_moonraker_updates
+  else
+    log "OctoEverywhere has \$BEHIND pending commit(s); checkout is already unpatched and ready to update."
+  fi
+  exit 0
+fi
+
+if [ -f "\$SUSPEND_FILE" ]; then
+  rm -f "\$SUSPEND_FILE"
+  log "OctoEverywhere is current; cleared the update suspension marker."
+fi
+
+if patch_is_present; then
+  log "OctoEverywhere is current and the KlipperAI patch is present."
+  exit 0
+fi
+
+log "OctoEverywhere is current but the KlipperAI patch is missing; reapplying now."
+apply_patch
 EOF
 
 cat >"$SERVICE_TMP" <<EOF
@@ -244,15 +347,31 @@ Persistent=true
 WantedBy=timers.target
 EOF
 
+cat >"$PATH_TMP" <<EOF
+[Unit]
+Description=Watch OctoEverywhere files for KlipperAI patch replacement
+
+[Path]
+PathChanged=$OE_ROOT/moonraker_octoeverywhere/moonrakerapirouter.py
+PathChanged=$OE_ROOT/moonraker_octoeverywhere/static/oe-ui.js
+Unit=$REAPPLY_SERVICE_NAME
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 run_root install -d -m 755 "$(dirname "$RUNNER_PATH")" "$SYSTEMD_DIR"
 run_root install -m 755 "$RUNNER_TMP" "$RUNNER_PATH"
 run_root install -m 644 "$SERVICE_TMP" "$SYSTEMD_DIR/$REAPPLY_SERVICE_NAME"
 run_root install -m 644 "$TIMER_TMP" "$SYSTEMD_DIR/$REAPPLY_TIMER_NAME"
+run_root install -m 644 "$PATH_TMP" "$SYSTEMD_DIR/$REAPPLY_PATH_NAME"
 run_root systemctl daemon-reload
 run_root "$RUNNER_PATH"
 run_root systemctl enable --now "$REAPPLY_TIMER_NAME"
+run_root systemctl enable --now "$REAPPLY_PATH_NAME"
 
 printf '[KlipperAI OE auto-reapply] Installed %s\n' "$RUNNER_PATH"
 printf '[KlipperAI OE auto-reapply] Installed %s/%s\n' "$SYSTEMD_DIR" "$REAPPLY_SERVICE_NAME"
 printf '[KlipperAI OE auto-reapply] Installed %s/%s\n' "$SYSTEMD_DIR" "$REAPPLY_TIMER_NAME"
+printf '[KlipperAI OE auto-reapply] Installed %s/%s\n' "$SYSTEMD_DIR" "$REAPPLY_PATH_NAME"
 printf '[KlipperAI OE auto-reapply] Timer interval: %s\n' "$CHECK_INTERVAL"

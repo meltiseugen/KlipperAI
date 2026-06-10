@@ -20,9 +20,9 @@ What it does not do:
 
 - it does not patch Mainsail itself
 - it does not add a second officially supported frontend to OctoEverywhere
-- it does not make the OctoEverywhere checkout look clean while patched; restore
-  the patch before running an OctoEverywhere update, then reapply it after the
-  update
+- it does not keep the OctoEverywhere checkout clean while the route is active;
+  the optional update hook temporarily removes only KlipperAI's marked blocks
+  when Moonraker reports a pending OE update
 
 ## Assumptions
 
@@ -66,47 +66,58 @@ The script writes timestamped backups under
 `/etc/klipperai/octoeverywhere-backups` so the OctoEverywhere git checkout does
 not get extra untracked backup files.
 
-## Auto-Reapply After Updates
+## Automatic Update Coordination
 
-OctoEverywhere updates can replace the patched files. To install a small systemd
-timer that checks the patch markers every 30 minutes and reapplies the patch
-only when it is missing:
+Install the systemd path/timer hook to coordinate Moonraker-managed OE updates:
 
 ```bash
 sh integrations/octoeverywhere/install-auto-reapply.sh \
-  --oe-root /usr/data/octoeverywhere \
+  --oe-root /home/biqu/octoeverywhere \
   --klipperai-prefix /klipperai \
   --klipperai-port 8811 \
   --nav-target _blank \
   --service octoeverywhere
 ```
 
+The hook:
+
+- checks Moonraker's `octoeverywhere` update-manager state
+- removes only KlipperAI's marked blocks when OE has pending commits
+- leaves unrelated local changes in the two OE files intact
+- refreshes Moonraker so the checkout can become updateable
+- watches the patched files and reapplies KlipperAI after the OE update
+- runs a five-minute fallback timer in case no file event is emitted
+- moves legacy `*.klippyai-backup-*` files out of the OE checkout and into
+  `/etc/klipperai/octoeverywhere-backups/legacy`
+
 Installed artifacts:
 
 - `/usr/local/bin/klipperai-octoeverywhere-reapply`
 - `/etc/systemd/system/klipperai-octoeverywhere-reapply.service`
 - `/etc/systemd/system/klipperai-octoeverywhere-reapply.timer`
+- `/etc/systemd/system/klipperai-octoeverywhere-reapply.path`
 
 ## Updating OctoEverywhere
 
-This integration edits two tracked files in the OctoEverywhere checkout, so
-Moonraker's update manager can report the OE repo as dirty. Before updating
-OctoEverywhere, restore those files and suspend auto-reapply:
+With the automatic hook installed, refresh Moonraker updates and wait for the
+hook to remove the patch before clicking `Update`. Manual preparation remains
+available:
 
 ```bash
 sh integrations/octoeverywhere/apply-local-klipperai-route-patch.sh \
-  --oe-root /usr/data/octoeverywhere \
+  --oe-root /home/biqu/octoeverywhere \
   --restore-original \
   --restart-service \
   --service octoeverywhere
 ```
 
-Then run the OctoEverywhere update from Mainsail/Moonraker. After it finishes,
-reapply KlipperAI:
+The restore operation removes the marked KlipperAI blocks rather than resetting
+the whole files from git. After the OE update, the path/timer hook reapplies the
+patch. Manual reapplication remains available:
 
 ```bash
 sh integrations/octoeverywhere/apply-local-klipperai-route-patch.sh \
-  --oe-root /usr/data/octoeverywhere \
+  --oe-root /home/biqu/octoeverywhere \
   --klipperai-prefix /klipperai \
   --klipperai-port 8811 \
   --nav-target _blank \
@@ -135,9 +146,9 @@ service again. The script also writes timestamped backups under
 
 ## Maintenance
 
-This patch targets OctoEverywhere's source layout as of May 2026. Restore it
-before OctoEverywhere updates, reapply it after the update, and expect to
-revisit it if upstream changes:
+This patch targets OctoEverywhere's source layout as of June 2026. The automatic
+hook logs a failed reapplication instead of resetting upstream files if these
+anchors change:
 
 - `moonraker_octoeverywhere/moonrakerapirouter.py`
 - `moonraker_octoeverywhere/static/oe-ui.js`
