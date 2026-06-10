@@ -224,6 +224,8 @@ done
 MANAGED_CONFIG_DIR="${CONFIG_DIR%/}/klipperai"
 UPDATE_MACRO_CFG_PATH="$MANAGED_CONFIG_DIR/klipperai-macros.cfg"
 KLIPPER_SERVICE_UNIT=$(normalize_service_name "$KLIPPER_SERVICE")
+CONFIG_OWNER=$(stat -c '%u' "$CONFIG_DIR")
+CONFIG_GROUP=$(stat -c '%g' "$CONFIG_DIR")
 
 [ -f "$INSTALL_DIR/pyproject.toml" ] || die "No pyproject.toml found in $INSTALL_DIR"
 [ -x "$INSTALL_DIR/.venv/bin/python" ] || die "Virtual environment missing: $INSTALL_DIR/.venv/bin/python"
@@ -342,8 +344,8 @@ EOF
 
 run_root install -d -m 755 "$(dirname "$UPDATE_RUNNER_PATH")"
 run_root install -m 755 "$RUNNER_TMP" "$UPDATE_RUNNER_PATH"
-run_root install -d -m 755 "$MANAGED_CONFIG_DIR"
-run_root install -m 664 "$MACRO_TMP" "$UPDATE_MACRO_CFG_PATH"
+run_root install -d -o "$CONFIG_OWNER" -g "$CONFIG_GROUP" -m 755 "$MANAGED_CONFIG_DIR"
+run_root install -o "$CONFIG_OWNER" -g "$CONFIG_GROUP" -m 664 "$MACRO_TMP" "$UPDATE_MACRO_CFG_PATH"
 
 if [ "$USES_SUDO" -eq 1 ]; then
   {
