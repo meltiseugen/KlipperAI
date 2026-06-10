@@ -37,7 +37,7 @@ run_root() {
   exit 1
 }
 
-OE_ROOT="${HOME}/octoeverywhere"
+OE_ROOT="${HOME:-}/octoeverywhere"
 KLIPPERAI_PREFIX="/klipperai"
 KLIPPERAI_PORT="8811"
 NAV_TARGET="_blank"

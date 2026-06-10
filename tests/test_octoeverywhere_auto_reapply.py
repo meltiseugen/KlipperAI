@@ -120,10 +120,12 @@ def test_auto_reapply_runner_coordinates_pending_update(tmp_path: Path) -> None:
         assert (state_dir / "octoeverywhere-backups/legacy" / legacy_backup.name).exists()
 
         state["commits_behind"] = 0
+        runner_env = env.copy()
+        runner_env.pop("HOME", None)
         subprocess.run(
             [str(runner)],
             check=True,
-            env=env,
+            env=runner_env,
             capture_output=True,
             text=True,
         )
