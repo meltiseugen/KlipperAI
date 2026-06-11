@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, get_args, Protocol
 
 import httpx
 from pydantic import Field, validator
@@ -10,10 +10,24 @@ from pydantic import Field, validator
 from klipperai_agent.diagnostics import DiagnosticsSnapshot
 from klipperai_agent.intent import ChatIntentOutput, IntentRouterProvider, classify_deterministic_intent
 from klipperai_agent.model_compat import BaseModel
-from klipperai_agent.printerconfig import build_config_lookup_response, ConfigRequestTarget, ConfigSnapshot
+from klipperai_agent.printerconfig import (
+    build_config_lookup_response,
+    ConfigFeature,
+    ConfigRequestTarget,
+    ConfigSnapshot,
+)
 from klipperai_agent.printerprofile import PrinterProfile
 from klipperai_agent.schemas import ConfigProposal, IssueFinding
 from klipperai_agent.settings import Settings
+
+_CONFIG_FEATURE_VALUES = tuple(get_args(ConfigFeature))
+_CONFIG_FEATURE_SET = frozenset(_CONFIG_FEATURE_VALUES)
+_CONFIG_FEATURE_ALIASES = {
+    "config": "generic",
+    "config_file": "generic",
+    "include": "generic",
+    "include_file": "generic",
+}
 
 
 class DiagnosisLLMOutput(BaseModel):
@@ -658,7 +672,9 @@ class OpenAIConfigAssistantProvider:
                 "Keep summary and next actions brief. "
                 "Return only JSON with keys: summary, proposals, next_actions, follow_up_questions. "
                 "For locate or explain requests, proposals should usually be an empty list. "
-                "Each proposal, when present, must include: feature, title, target_file, config, rationale, assumptions, warnings."
+                "Each proposal, when present, must include: feature, title, target_file, config, rationale, assumptions, warnings. "
+                f"The feature must be one of: {', '.join(_CONFIG_FEATURE_VALUES)}. "
+                "Use generic for include directives, config-file organization, or any proposal that does not fit a listed printer feature."
             ),
             user_prompt=(
                 f"User request:\n{payload.user_message}\n\n"
@@ -672,7 +688,11 @@ class OpenAIConfigAssistantProvider:
                 "Return a concise structured config proposal."
             ),
         )
-        return ConfigAssistantOutput.model_validate(_with_required_summary(data, "No config proposal was returned."))
+        normalized_data = _normalize_config_assistant_data(
+            _with_required_summary(data, "No config proposal was returned."),
+            fallback_feature=payload.target.feature,
+        )
+        return ConfigAssistantOutput.model_validate(normalized_data)
 
 
 class OpenAIJsonClient:
@@ -733,6 +753,33 @@ def _with_required_summary(data: dict[str, Any], fallback: str) -> dict[str, Any
     if not str(data.get("summary", "")).strip():
         data = {**data, "summary": fallback}
     return data
+
+
+def _normalize_config_assistant_data(
+    data: dict[str, Any],
+    *,
+    fallback_feature: ConfigFeature,
+) -> dict[str, Any]:
+    proposals = data.get("proposals")
+    if isinstance(proposals, dict):
+        proposals = [proposals]
+    if not isinstance(proposals, list):
+        return data
+
+    normalized_proposals: list[Any] = []
+    for item in proposals:
+        if not isinstance(item, dict):
+            normalized_proposals.append(item)
+            continue
+
+        raw_feature = str(item.get("feature") or "").strip().lower()
+        normalized_feature = raw_feature.replace("-", "_").replace(" ", "_")
+        normalized_feature = _CONFIG_FEATURE_ALIASES.get(normalized_feature, normalized_feature)
+        if normalized_feature not in _CONFIG_FEATURE_SET:
+            normalized_feature = fallback_feature
+        normalized_proposals.append({**item, "feature": normalized_feature})
+
+    return {**data, "proposals": normalized_proposals}
 
 
 def _coerce_string_list(value: Any) -> list[str]:
